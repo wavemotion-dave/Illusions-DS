@@ -420,8 +420,6 @@ void ResetMSX(void)
     msxWipeRAM();       // Wipe main RAM area (config chooses zero or random)
     msx_restore_bios(); // Put the BIOS back in place and point to it
 
-    keyMapType = 0; // If we go back into options
-
     // -----------------------------------------------------------
     // Timer 1 is used to time frame-to-frame of actual emulation
     // -----------------------------------------------------------
@@ -2624,7 +2622,6 @@ u32 LoopZ80(void)
     
     CPU.CycleDeficit = ExecZ80(cycles_to_process);
     
-    extern u16 turbo_timer;
     turbo_timer += 16;  // Roughly 16.3 ticks per scanline... good enough
 
     // Run the FDC engine
@@ -2640,7 +2637,7 @@ u32 LoopZ80(void)
     if (CPU.IRequest != INT_NONE)
     {
         IntZ80(&CPU, CPU.IRequest);
-        CPU.NumInts++;                                                                   // Track Interrupt Requests
+        CPU.NumInts++;  // Track Interrupt Requests
     }
 
     // Drop out unless end of screen is reached

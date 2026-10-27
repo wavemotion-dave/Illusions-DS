@@ -206,7 +206,6 @@ extern u8 msx_irq_pending;
 extern u8 palette_latch;
 extern uint8_t OccBuf[320];
 extern u8 zoom_screen;
-extern u8 keyMapType;
 
 // --------------------------------------------------
 // Some CPU and VDP and SGM stuff that we need

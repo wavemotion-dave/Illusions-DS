@@ -1,5 +1,12 @@
 # Illusions-DS - MSX2 Emulator for the MSX-Translation of Illusion City
 
+Requires a DSi/XL/LL and will NOT run in DS-Lite or 'Compatibility' mode.
+
+The only other file needed is the 4MB ASCII16-X ROM of Illusion City as produced by MSX Translations.
+
+Place this file exactly named "Illusion City.rom" in the /roms folder on your SD card.
+
+
 # Donations Welcome (but never required!)
 
 These hobby emulators have been a labor of love. An embarassing amount of development time has gone into it as I've strived to provide an enjoyable retro experience on the DS handheld. It's free to use and always will be, however if you feel inclined to buy me a virtual coffee for the effort, that would be beyond amazing!

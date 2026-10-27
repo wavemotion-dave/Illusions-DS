@@ -811,209 +811,6 @@ void SaveConfig(bool bShow)
 {
 }
 
-#define TWEAK_NONE 0xFF
-
-typedef struct
-{
-    const char *match1;
-    const char *match2;
-
-    u8 expansion;
-    u8 frameSkip;
-    u8 maxSprites;
-    u8 machineType;
-    u8 dpad;
-    u8 ymScale;
-} GameTweak;
-
-// -------------------------------------------------------------------------------------------------------------
-// Game tweaks for some games based on filenames loaded.
-// e.g. Snatcher gets SCC+, Q-Bert gets diagonals, etc.
-// -------------------------------------------------------------------------------------------------------------
-static const GameTweak gameTweaks[] =
-{
-    // match1,          match2,              expansion,   frameSkip,      maxSprites, machineType,   dpad,               ymScale
-
-    // Sprite limit
-    {"QBIQS",           NULL,                TWEAK_NONE,  TWEAK_NONE,     0,          TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"URIDIUM",         NULL,                TWEAK_NONE,  TWEAK_NONE,     0,          TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"ANTARCTIC",       "ADVENTURE",         TWEAK_NONE,  TWEAK_NONE,     0,          TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"ADVENTURES",      "PARK",              TWEAK_NONE,  TWEAK_NONE,     0,          TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-
-    // SCC+
-    {"SNATCHER",        NULL,                EXP_SCC_PLUS, FS_AGGRESSIVE, TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-
-    // Aggressive frame skip on DS-Lite
-    {"MANBOW",          NULL,                TWEAK_NONE,   FS_AGGRESSIVE, TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-
-    // MSX-MUSIC
-    {"SINGULAR",        "STONE",             EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"ANGELIC",         "WARRIOR",           EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         YM_BAL_MED},
-    {"SLAYER",          "VI",                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"ILLUSION",        "CITY",              EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"SUPER",           "COOKS",             EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"PSYCH",           "WORLD",             EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"MAD",             "HOUSE",             EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"DEAD",            "BRAIN",             EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"EUROPE",          "WAR",               EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"FAMILY",          "STADIUM",           EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"FLEET",           "COMMANDER 2",       EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"GAMBLER",         "JIKICHUSHINPA",     EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"LILLY",           "SAGA",              EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"MAISON",          "IKKOKU",            EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"EMERALD",         "DRAGON",            EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"PENGUIN",         "WARS",              EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"BLASTER",         "BURN",              EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"LAYDOCK",         "LAST",              EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"THEXDER",         "HAWK",              EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"BLADE",           "LORDS",             EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         YM_BAL_HIGH},
-    {"LUBECK",          NULL,                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"XAK",             NULL,                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         YM_BAL_LOW},
-    {"FAMICLE",         NULL,                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"FRAY",            NULL,                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"ALESTE",          NULL,                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"MONOGATARI",      NULL,                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"GOLVELLIUS 2",    NULL,                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"GOLVELLIUS II",   NULL,                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"BUSHOUHUUNROKU",  NULL,                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"SENKOKUGUNYUDEN", NULL,                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"FARDRAUT",        NULL,                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"SUIKODEN",        NULL,                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"PAC-MANIA",       NULL,                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"GENCHOHISI",      NULL,                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"QUINPL",          NULL,                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"UNDEADLINE",      NULL,                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"CRIMSON",         NULL,                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         YM_BAL_MED},
-    {"FEEDBACK",        NULL,                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"MASTER 3",        NULL,                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"MASTER III",      NULL,                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"XEVIOUS",         NULL,                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"RANDAR",          NULL,                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"R-TYPE",          NULL,                EXP_FM_PAC,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-
-    // D-Pad
-    {"ARKANOID",        NULL,                TWEAK_NONE,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    DPAD_ARKANOID,      TWEAK_NONE},
-    {"CHUCKIE",         NULL,                TWEAK_NONE,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    DPAD_SLIDE_N_GLIDE, TWEAK_NONE},
-    {"QBERT",           NULL,                TWEAK_NONE,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    DPAD_DIAGONALS,     TWEAK_NONE},
-    {"Q-BERT",          NULL,                TWEAK_NONE,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    DPAD_DIAGONALS,     TWEAK_NONE},
-
-    // Machine type
-    {"KING",            "BALLOON",           TWEAK_NONE,  TWEAK_NONE,     TWEAK_NONE, MACHINE_MSX1,  TWEAK_NONE,         TWEAK_NONE},
-
-    // Beeper
-    {"WAY",             "TIGER",             EXP_BEEPER,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"JACK",            "NIPPER",            EXP_BEEPER,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"MASTER",          "LAMPS",             EXP_BEEPER,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"FUTURE",          "KNIGHT",            EXP_BEEPER,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"AVENGER",         NULL,                EXP_BEEPER,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-    {"BOUNDER",         NULL,                EXP_BEEPER,  TWEAK_NONE,     TWEAK_NONE, TWEAK_NONE,    TWEAK_NONE,         TWEAK_NONE},
-};
-
-void ApplyDatabaseTweaks(void)
-{
-    const char *filename = GetMasterFilename();
-
-    for (unsigned int i = 0; i < sizeof(gameTweaks) / sizeof(gameTweaks[0]); i++)
-    {
-        const GameTweak *t = &gameTweaks[i];
-
-        if (!strstr(filename, t->match1))
-        {
-            continue;
-        }
-
-        if (t->match2 && !strstr(filename, t->match2))
-        {
-            continue;
-        }
-
-        if (t->expansion != TWEAK_NONE)
-        {
-            if ((t->expansion == EXP_FM_PAC) && !isDSiMode())
-            {
-                // No MSX-MUSIC for the DSi... not enough CPU
-            }
-            else
-            {
-                myConfig.expansion = t->expansion;
-            }
-        }
-
-        // Frame skip is ALWAYS DS-Lite only.
-        if (t->frameSkip != TWEAK_NONE && !isDSiMode())
-        {
-            myConfig.frameSkip = t->frameSkip;
-        }
-
-        if (t->maxSprites != TWEAK_NONE)
-        {
-            myConfig.maxSprites = t->maxSprites;
-        }
-
-        if (t->machineType != TWEAK_NONE)
-        {
-            myConfig.machineType = t->machineType;
-        }
-
-        if (t->dpad != TWEAK_NONE)
-        {
-            myConfig.dpad = t->dpad;
-        }
-
-        if (t->ymScale != TWEAK_NONE)
-        {
-            myConfig.ymScale = t->ymScale;
-        }
-    }
-}
-
-void MapPlayer1(void)
-{
-    myConfig.keymap[0] = 0;   // NDS D-Pad mapped to MSX Joystick UP
-    myConfig.keymap[1] = 1;   // NDS D-Pad mapped to MSX Joystick DOWN
-    myConfig.keymap[2] = 2;   // NDS D-Pad mapped to MSX Joystick LEFT
-    myConfig.keymap[3] = 3;   // NDS D-Pad mapped to MSX Joystick RIGHT
-    myConfig.keymap[4] = 4;   // NDS A Button mapped to MSX Button 1
-    myConfig.keymap[5] = 5;   // NDS B Button mapped to MSX Button 2
-    myConfig.keymap[6] = 82;  // NDS X Button mapped to PAN UP
-    myConfig.keymap[7] = 83;  // NDS Y Button mapped to PAN DN
-    myConfig.keymap[8] = 49;  // NDS R      mapped to CTRL
-    myConfig.keymap[9] = 48;  // NDS L      mapped to SHIFT
-    myConfig.keymap[10] = 53; // NDS Start  mapped to RETURN
-    myConfig.keymap[11] = 52; // NDS Select mapped to SPACE
-}
-
-void MapPlayer2(void)
-{
-    myConfig.keymap[0] = 6;   // NDS D-Pad mapped to MSX Joystick UP
-    myConfig.keymap[1] = 7;   // NDS D-Pad mapped to MSX Joystick DOWN
-    myConfig.keymap[2] = 8;   // NDS D-Pad mapped to MSX Joystick LEFT
-    myConfig.keymap[3] = 9;   // NDS D-Pad mapped to MSX Joystick RIGHT
-    myConfig.keymap[4] = 10;  // NDS A Button mapped to MSX Button 1
-    myConfig.keymap[5] = 11;  // NDS B Button mapped to MSX Button 2
-    myConfig.keymap[6] = 82;  // NDS X Button mapped to PAN UP
-    myConfig.keymap[7] = 83;  // NDS Y Button mapped to PAN DN
-    myConfig.keymap[8] = 49;  // NDS R      mapped to CTRL
-    myConfig.keymap[9] = 48;  // NDS L      mapped to SHIFT
-    myConfig.keymap[10] = 53; // NDS Start  mapped to RETURN
-    myConfig.keymap[11] = 52; // NDS Select mapped to SPACE
-}
-
-void MapCursors(void)
-{
-    myConfig.keymap[0] = 56;  // UP Arrow
-    myConfig.keymap[1] = 57;  // Down Arrow
-    myConfig.keymap[2] = 58;  // Left Arrow
-    myConfig.keymap[3] = 59;  // Right Arrow
-    myConfig.keymap[4] = 52;  // Space
-    myConfig.keymap[5] = 56;  // Up Arrow
-    myConfig.keymap[6] = 82;  // NDS X Button mapped to PAN UP
-    myConfig.keymap[7] = 83;  // NDS Y Button mapped to PAN DN
-    myConfig.keymap[8] = 49;  // NDS R      mapped to CTRL
-    myConfig.keymap[9] = 48;  // NDS L      mapped to SHIFT
-    myConfig.keymap[10] = 53; // NDS Start  mapped to RETURN
-    myConfig.keymap[10] = 53; // NDS Select mapped to RETURN
-}
 
 void SetDefaultGlobalConfig(void)
 {
@@ -1030,7 +827,18 @@ void SetDefaultGameConfig(void)
 {
     myConfig.game_crc = 0; // No game in this slot yet
 
-    MapPlayer1(); // Default to Player 1 mapping
+    myConfig.keymap[0] = 0;   // NDS D-Pad mapped to MSX Joystick UP
+    myConfig.keymap[1] = 1;   // NDS D-Pad mapped to MSX Joystick DOWN
+    myConfig.keymap[2] = 2;   // NDS D-Pad mapped to MSX Joystick LEFT
+    myConfig.keymap[3] = 3;   // NDS D-Pad mapped to MSX Joystick RIGHT
+    myConfig.keymap[4] = 4;   // NDS A Button mapped to MSX Button 1
+    myConfig.keymap[5] = 5;   // NDS B Button mapped to MSX Button 2
+    myConfig.keymap[6] = 82;  // NDS X Button mapped to PAN UP
+    myConfig.keymap[7] = 83;  // NDS Y Button mapped to PAN DN
+    myConfig.keymap[8] = 49;  // NDS R      mapped to CTRL
+    myConfig.keymap[9] = 48;  // NDS L      mapped to SHIFT
+    myConfig.keymap[10] = 53; // NDS Start  mapped to RETURN
+    myConfig.keymap[11] = 52; // NDS Select mapped to SPACE
 
     myConfig.msxMapper = GUESS;                 // MSX mapper takes its best guess
     myConfig.machineType = MACHINE_MSX2;        // Default machine is MSX2 with Slot 3 Expanded
@@ -1052,8 +860,6 @@ void SetDefaultGameConfig(void)
     myConfig.reserved5 = 0;
     myConfig.reserved6 = 0;
     myConfig.reserved7 = 0xA5; // So it's easy to spot on an "upgrade" and we can re-default it
-
-    ApplyDatabaseTweaks(); // Some games need tweaks to default settings... do this now
 }
 
 // ----------------------------------------------------------
@@ -1079,15 +885,6 @@ void FindConfig(void)
     // below, we will fill in the config with data read from the file.
     // -----------------------------------------------------------------
     SetDefaultGameConfig();
-
-    for (u16 slot = 0; slot < MAX_CONFIGS; slot++)
-    {
-        if (AllConfigs[slot].game_crc == GetMasterCRC()) // Got a match?!
-        {
-            memcpy(&myConfig, &AllConfigs[slot], sizeof(struct Config_t));
-            break;
-        }
-    }
 }
 
 // ------------------------------------------------------------------------------
@@ -1285,24 +1082,6 @@ void DisplayKeymapName(u32 uY)
     DSPrint(1, 17, (uY == 17 ? 2 : 0), szCha);
 }
 
-u8 keyMapType = 0;
-void SwapKeymap(void)
-{
-    keyMapType = (keyMapType + 1) % 3;
-    switch (keyMapType)
-    {
-    case 0:
-        MapPlayer1();
-        break;
-    case 1:
-        MapPlayer2();
-        break;
-    case 2:
-        MapCursors();
-        break;
-    }
-}
-
 // ------------------------------------------------------------------------------
 // Allow the user to change the key map for the current game and give them
 // the option of writing that keymap out to a configuration file for the game.
@@ -1322,8 +1101,6 @@ void IllusionDSChangeKeymap(void)
     // --------------------------------------------------
     DSPrint(1, 19, 0, ("   D-PAD : CHANGE KEY MAP    "));
     DSPrint(1, 20, 0, ("       B : RETURN MAIN MENU  "));
-    DSPrint(1, 21, 0, ("       X : SWAP KEYMAP TYPE  "));
-    DSPrint(1, 22, 0, ("   START : SAVE KEYMAP       "));
     DisplayKeymapName(ucY);
 
     bIndTch = myConfig.keymap[0];
@@ -1442,28 +1219,10 @@ void IllusionDSChangeKeymap(void)
             ucR = 0;
         }
 
-        // Swap Player 1 and Player 2 keymap
-        if (keysCurrent() & KEY_X)
-        {
-            SwapKeymap();
-            bIndTch = myConfig.keymap[ucY - 6];
-            DisplayKeymapName(ucY);
-            while (keysCurrent() & KEY_X)
-                ;
-            WAITVBL
-        }
         swiWaitForVBlank();
     }
     while (keysCurrent() & KEY_B)
         ;
-}
-
-// ----------------------------------------------------------------
-// We show the CART1, CART2 and DISK filenames in the main menu...
-// ----------------------------------------------------------------
-void DisplayFileNames(void)
-{
-
 }
 
 // ----------------------------------------------------------------------
@@ -1522,35 +1281,6 @@ void NoGameSelected(void)
         ;
 }
 
-void CheckIfGameHasMusicMapper(void)
-{
-    if (myConfig.expansion == EXP_SCC_PLUS)
-    {
-        // If the new Config tells us this is an SCC+ game, that slides into CART2
-        memset(&MyMedia[MEDIA_CART2], 0x00, sizeof(MyMedia[MEDIA_CART2]));
-        strcpy(MyMedia[MEDIA_CART2].filename, "SCC-I");
-        MyMedia[MEDIA_CART2].filecrc = 0xFFFFFFFF;
-    }
-    else if (myConfig.expansion == EXP_FM_PAC)
-    {
-        // If the new Config tells us this is an FM-PAC cart, that slides into CART2
-        memset(&MyMedia[MEDIA_CART2], 0x00, sizeof(MyMedia[MEDIA_CART2]));
-        strcpy(MyMedia[MEDIA_CART2].filename, "FM-PAC");
-        MyMedia[MEDIA_CART2].filecrc = 0xFFFFFFFF;
-    }
-    else if (myConfig.expansion == EXP_MEGARAM)
-    {
-        // If the new Config tells us this is an MEGARAM SCC cart, that slides into CART2
-        memset(&MyMedia[MEDIA_CART2], 0x00, sizeof(MyMedia[MEDIA_CART2]));
-        strcpy(MyMedia[MEDIA_CART2].filename, "MEGARAM MUSIC");
-        MyMedia[MEDIA_CART2].filecrc = 0xFFFFFFFF;
-    }
-    else if (MyMedia[MEDIA_CART2].filecrc == 0xFFFFFFFF) // Was music mapped in?
-    {
-        memset(&MyMedia[MEDIA_CART2], 0x00, sizeof(MyMedia[MEDIA_CART2]));
-    }
-}
-
 void UpperScreenMainMenu(void)
 {
     videoSetMode(MODE_0_2D | DISPLAY_BG0_ACTIVE | DISPLAY_BG1_ACTIVE);
@@ -1578,9 +1308,6 @@ void IllusionDSMainMenu(void)
 
     // Lower Screen Background
     BottomScreenMainMenu();
-
-    // Display games as we have them
-    DisplayFileNames();
 
     while (!bPlayGame)
     {
@@ -1610,7 +1337,6 @@ void IllusionDSMainMenu(void)
                         exit(0);
                     }
                     BottomScreenMainMenu();
-                    DisplayFileNames();
                 }
                 else if ((touch.py < 96)) // Options
                 {
@@ -1618,16 +1344,13 @@ void IllusionDSMainMenu(void)
                     {
                         BottomScreenOptions();
                         IllusionDSGameOptions(false);
-                        CheckIfGameHasMusicMapper();
                         BottomScreenMainMenu();
-                        DisplayFileNames();
                     }
                     else
                     {
                         BottomScreenOptions();
                         NoGameSelected();
                         BottomScreenMainMenu();
-                        DisplayFileNames();
                     }
                 }
                 else if ((touch.py < 140)) // Controller
@@ -1637,14 +1360,12 @@ void IllusionDSMainMenu(void)
                         BottomScreenOptions();
                         IllusionDSChangeKeymap();
                         BottomScreenMainMenu();
-                        DisplayFileNames();
                     }
                     else
                     {
                         BottomScreenOptions();
                         NoGameSelected();
                         BottomScreenMainMenu();
-                        DisplayFileNames();
                     }
                 }
                 else // Play Game
