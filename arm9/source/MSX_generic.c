@@ -818,9 +818,6 @@ void SetDefaultGlobalConfig(void)
     memset(&myGlobalConfig, 0x00, sizeof(myGlobalConfig));
     myGlobalConfig.showFPS = 0;           // Don't show FPS counter by default
     myGlobalConfig.debugger = 0;          // No debugger by default.
-    myGlobalConfig.bShowInstructions = 1; // Always show instructions until config saved
-    myGlobalConfig.bDiskSounds = 1;       // Default is to have disk sounds
-    myGlobalConfig.bShowPSG = 0;          // By default, no PSG logo
 }
 
 void SetDefaultGameConfig(void)
@@ -833,33 +830,23 @@ void SetDefaultGameConfig(void)
     myConfig.keymap[3] = 3;   // NDS D-Pad mapped to MSX Joystick RIGHT
     myConfig.keymap[4] = 4;   // NDS A Button mapped to MSX Button 1
     myConfig.keymap[5] = 5;   // NDS B Button mapped to MSX Button 2
-    myConfig.keymap[6] = 82;  // NDS X Button mapped to PAN UP
-    myConfig.keymap[7] = 83;  // NDS Y Button mapped to PAN DN
+    myConfig.keymap[6] = 4;   // NDS X Button mapped to MSX Button 1
+    myConfig.keymap[7] = 5;   // NDS Y Button mapped to MSX Button 2
     myConfig.keymap[8] = 49;  // NDS R      mapped to CTRL
     myConfig.keymap[9] = 48;  // NDS L      mapped to SHIFT
     myConfig.keymap[10] = 53; // NDS Start  mapped to RETURN
     myConfig.keymap[11] = 52; // NDS Select mapped to SPACE
 
-    myConfig.msxMapper = GUESS;                 // MSX mapper takes its best guess
-    myConfig.machineType = MACHINE_MSX2;        // Default machine is MSX2 with Slot 3 Expanded
     myConfig.autoFire = 0;                      // Default to no auto-fire on either button
     myConfig.keyboard = OVL_FULLKBD;            // Default to normal full MSX keyboard
     myConfig.maxSprites = 1;                    // 0 means limit to the original 4/8 sprites of the VDP, 1 means 32 sprites for emulation
-    myConfig.dpad = DPAD_NORMAL;                // Normal DPAD use - mapped to joystick
-    myConfig.yOffset = 2;                       // Default is no Y offset
-    myConfig.expansion = EXP_NONE;              // Default is no expansion (normal PSG sound, no special mapper cards in slot 2)
-    myConfig.cpuBoost = 0;                      // Run CPU at true speed (1 = boost 25%, 2 = boost 50%)
-    myConfig.scaleScreen = 0;                   // 0=No Screen Scale. 1=Vertical Compression (yuck!)
-    myConfig.frameSkip = 1;                     // Light frameskip for IC
+    myConfig.yOffset = 2;                       // Small offset to help compressed Illusion City screens look their best
+    myConfig.frameSkip = 1;                     // Light frameskip for Illusion City
     myConfig.ymScale = YM_BAL_MAX;              // Normal YM is scaled to be the loudest
-    myConfig.overscan = 0;                      // VDP Overscan disabled until specifically enabled
     myConfig.reserved1 = 0;
     myConfig.reserved2 = 0;
     myConfig.reserved3 = 0;
     myConfig.reserved4 = 0;
-    myConfig.reserved5 = 0;
-    myConfig.reserved6 = 0;
-    myConfig.reserved7 = 0xA5; // So it's easy to spot on an "upgrade" and we can re-default it
 }
 
 // ----------------------------------------------------------
@@ -1032,12 +1019,6 @@ void IllusionDSGameOptions(bool bIsGlobal)
             }
         }
 
-        if (!myConfig.overscan && myConfig.yOffset > 20)
-        {
-            myConfig.yOffset = 0;
-            (void)display_options_list(true, optionHighlighted);
-        }
-        
         swiWaitForVBlank();
     }
 

@@ -2507,7 +2507,7 @@ void RefreshLine80(u8 Y)
 //  0  0  1  0  1   512*212, 16  colours/pixel   (BASIC SCREEN 7)
 //  0  0  1  1  1   256*212, 256 colours/pixel   (BASIC SCREEN 8)
 //  1  0  0  1  0   Text 80x24                   (BASIC SCREEN 0, WIDTH 80)
-void CheckNewMode(void)
+ITCM_CODE void CheckNewMode(void)
 {
   u16 newMode;
 
@@ -2534,34 +2534,17 @@ void CheckNewMode(void)
   OH = SprHeights[VDP[1]&0x03];
   IH = SprHeights[VDP[1]&0x02];
 
-  if (myConfig.machineType == MACHINE_MSX1)
-  {
-      u32 VRAMMask = 0x3FFF;
-      ChrTab=VDP_Memory+(((int)(VDP[2]&SCR[ScrMode].R2)<<10)&VRAMMask);
-      ColTab=VDP_Memory+(((int)(VDP[3]&SCR[ScrMode].R3)<<6)&VRAMMask);
-      ChrGen=VDP_Memory+(((int)(VDP[4]&SCR[ScrMode].R4)<<11)&VRAMMask);
-      SprTab=VDP_Memory+(((int)(VDP[5]&SCR[ScrMode].R5)<<7)&VRAMMask);
-      SprGen=VDP_Memory+(((int)(VDP[6])<<11)&VRAMMask);
+  u32 I=(ScrMode>6) ? 11:10;
+  ChrTab=VDP_Memory+(((int)(VDP[2]&SCR[ScrMode].R2)<<I));
+  ChrGen=VDP_Memory+(((int)(VDP[4]&SCR[ScrMode].R4)<<11));
+  ColTab=VDP_Memory+(((int)(VDP[3]&SCR[ScrMode].R3)<<6)) + ((int)VDP[10]<<14);
+  SprTab=VDP_Memory+(((int)(VDP[5]&SCR[ScrMode].R5)<<7)) + ((int)VDP[11]<<15);
+  SprGen=VDP_Memory+((int)(VDP[6]<<11));
 
-      ChrTabM = ((int)(VDP[2]|(u8)~SCR[ScrMode].M2)<<10)|0x03FF;
-      ColTabM = ((int)(VDP[3]|(u8)~SCR[ScrMode].M3)<<6) |0x003F;
-      ChrGenM = ((int)(VDP[4]|(u8)~SCR[ScrMode].M4)<<11)|0x07FF;
-      SprTabM = ((int)(VDP[5]|(u8)~SCR[ScrMode].M5)<<7) |0x007F;
-  }
-  else
-  {
-      u32 I=(ScrMode>6) ? 11:10;
-      ChrTab=VDP_Memory+(((int)(VDP[2]&SCR[ScrMode].R2)<<I));
-      ChrGen=VDP_Memory+(((int)(VDP[4]&SCR[ScrMode].R4)<<11));
-      ColTab=VDP_Memory+(((int)(VDP[3]&SCR[ScrMode].R3)<<6)) + ((int)VDP[10]<<14);
-      SprTab=VDP_Memory+(((int)(VDP[5]&SCR[ScrMode].R5)<<7)) + ((int)VDP[11]<<15);
-      SprGen=VDP_Memory+((int)(VDP[6]<<11));
-
-      ChrTabM = ((int)(VDP[2]|(u8)~SCR[ScrMode].M2)<<I)|((1<<I)-1);
-      ChrGenM = ((int)(VDP[4]|(u8)~SCR[ScrMode].M4)<<11)|0x07FF;
-      ColTabM = ((int)(VDP[3]|(u8)~SCR[ScrMode].M3)<<6) |0x1C03F;
-      SprTabM = ((int)(VDP[5]|(u8)~SCR[ScrMode].M5)<<7) |0x1807F;
-  }
+  ChrTabM = ((int)(VDP[2]|(u8)~SCR[ScrMode].M2)<<I)|((1<<I)-1);
+  ChrGenM = ((int)(VDP[4]|(u8)~SCR[ScrMode].M4)<<11)|0x07FF;
+  ColTabM = ((int)(VDP[3]|(u8)~SCR[ScrMode].M3)<<6) |0x1C03F;
+  SprTabM = ((int)(VDP[5]|(u8)~SCR[ScrMode].M5)<<7) |0x1807F;
 
   handle_transparency();
 }
@@ -2569,17 +2552,8 @@ void CheckNewMode(void)
 
 ITCM_CODE void Write9938(u8 iReg, u8 value)
 {
-  /* There are VDP registers - map down to these and mask off irrelevant bits */
-  if (myConfig.machineType == MACHINE_MSX1)
-  {
-    iReg &= 0x07;
-    value &= VDP_RegisterMasks_MSX1[iReg];
-  }
-  else
-  {
-    iReg &= 0x3f;
-    value &= VDP_RegisterMasks[iReg];
-  }
+  iReg &= 0x3f;
+  value &= VDP_RegisterMasks[iReg];
 
   // --------------------------------------------------------------------------
   // The overscan trick is when the system is configured for 212 scanline mode
@@ -2821,7 +2795,7 @@ ITCM_CODE void Loop9938(void)
   }
   else
   /* If refreshing display area, call scanline handler */
-  if ((CurLine >= VDP9938_START_LINE) && (CurLine < VDP9938_END_LINE + (myConfig.overscan ? 12:0)))
+  if ((CurLine >= VDP9938_START_LINE) && (CurLine < VDP9938_END_LINE))
   {
       u8 scan_sprites = 0;
 
@@ -2877,18 +2851,14 @@ ITCM_CODE void Loop9938(void)
       }
       frame_number++; // This one tracks all frames... drawn or skipped
 
-      // The Vertical Blank interrupt is skipped if we are configured for Overscan and the overscan trick was used this frame.
-      if (!myConfig.overscan || !overscan_trick)
+      /* Generate IRQ when enabled and when VBlank flag goes up */
+      if (VDP9938_VBlankON && !(VDPStatus[0]&VDP9938_STAT_VBLANK))
       {
-          /* Generate IRQ when enabled and when VBlank flag goes up */
-          if (VDP9938_VBlankON && !(VDPStatus[0]&VDP9938_STAT_VBLANK))
-          {
-              SetVDPIRQ(VDP_IRQ_VBLANK, 1);
-          }
-
-          /* Set VBlank status flag */
-          VDPStatus[0] |= VDP9938_STAT_VBLANK;
+          SetVDPIRQ(VDP_IRQ_VBLANK, 1);
       }
+
+      /* Set VBlank status flag */
+      VDPStatus[0] |= VDP9938_STAT_VBLANK;
 
       /* Set Sprite Collision status flag */
       if(!(VDPStatus[0]&VDP9938_STAT_OVRLAP))
@@ -2936,28 +2906,14 @@ void Reset9938(void)
     memset(OccBuf,      0x00, sizeof(OccBuf));       // Reset the sprite occurrence buffer
     CurrentEpochSaved = 0;                           // Will be immediately incremented to 1 and so not match our cleared OccBuf[]
 
-    if (myConfig.machineType == MACHINE_MSX1)
-    {
-        VDP[0] = 0x00;                      // Control Bits I:  Graphics Mode 1 (M3... M1,M2 in VDP[1])
-        VDP[1] = 0x80;                      // Control Bits II: Force 16K Video Memory (M2,M3 zero)
-        VDP[2] = 0x06;                      // Default for pattern table base address
-        VDP[3] = 0x80;                      // Default for color table base address
-        VDP[4] = 0x00;                      // Default for pattern generator base address
-        VDP[5] = 0x36;                      // Default for sprite attribute table base address
-        VDP[6] = 0x07;                      // Default for sprite generator table base address
-        VDP[7] = 0x00;                      // FG color and BG color both 0x00 to start
-    }
-    else // MSX2 defaults...
-    {
-        VDP[0] = 0x00;                      // Graphic mode enabled
-        VDP[1] = 0x10;                      // 128K VRAM, IRQ enable, high-res mode
-        VDP[2] = 0xFF;                      // Name table for text modes
-        VDP[3] = 0xFF;                      // Color table
-        VDP[4] = 0xFF;                      // Pattern generator
-        VDP[5] = 0xFF;                      // Sprite attribute table
-        VDP[6] = 0x00;                      // Sprite generator table
-        VDP[7] = 0x00;                      // FG/BG colors
-    }
+    VDP[0] = 0x00;                      // Graphic mode enabled
+    VDP[1] = 0x10;                      // 128K VRAM, IRQ enable, high-res mode
+    VDP[2] = 0xFF;                      // Name table for text modes
+    VDP[3] = 0xFF;                      // Color table
+    VDP[4] = 0xFF;                      // Pattern generator
+    VDP[5] = 0xFF;                      // Sprite attribute table
+    VDP[6] = 0x00;                      // Sprite generator table
+    VDP[7] = 0x00;                      // FG/BG colors
 
     VDPCtrlLatch=0;                         // Control Latch zero
     VDPDlatch = 0;                          // Data Latch zero

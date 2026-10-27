@@ -655,15 +655,15 @@ u8 MiniMenu(void)
             {
                 if (touch.px <= 64)
                 {
-                    retVal = MENU_CHOICE_SAVE_GAME;
+                    retVal = MENU_CHOICE_LOAD_GAME1;
                 }
                 else if (touch.px <= 128)
                 {
-                    retVal = MENU_CHOICE_LOAD_GAME;
+                    retVal = MENU_CHOICE_LOAD_GAME2;
                 }
                 else if (touch.px <= 192)
                 {
-                    retVal = MENU_CHOICE_SWAP_DISK;
+                    retVal = MENU_CHOICE_RESET_GAME;
                 }
                 else if (touch.px <= 256)
                 {
@@ -676,19 +676,19 @@ u8 MiniMenu(void)
             {
                 if (touch.px <= 64)
                 {
-                    retVal = MENU_CHOICE_HI_SCORE;
+                    retVal = MENU_CHOICE_SAVE_GAME1;
                 }
                 else if (touch.px <= 128)
                 {
-                    retVal = MENU_CHOICE_GAME_OPTIONS;
+                    retVal = MENU_CHOICE_SAVE_GAME2;
                 }
                 else if (touch.px <= 192)
                 {
-                    retVal = MENU_CHOICE_DEFINE_KEYS;
+                    retVal = MENU_CHOICE_GAME_OPTIONS;
                 }
                 else if (touch.px <= 256)
                 {
-                    retVal = MENU_CHOICE_RESET_GAME;
+                    retVal = MENU_CHOICE_DEFINE_KEYS;
                 }
 
                 break;
@@ -1474,14 +1474,7 @@ void IllusionDSRunEmu(void)
                         // ------------------------------------------------------------
                         else
                         {
-                            if (myConfig.keyboard == OVL_ALPHAKBD)
-                            {
-                                meta_key = handle_alpha_keyboard_press(iTx, iTy);
-                            }
-                            else
-                            {
-                                meta_key = handle_msx_keyboard_press(iTx, iTy);
-                            }
+                            meta_key = handle_msx_keyboard_press(iTx, iTy);
                         }
 
                         if (kbd_key != 0)
@@ -1526,9 +1519,6 @@ void IllusionDSRunEmu(void)
                             SoundUnPause();
                             break;
 
-                        case MENU_CHOICE_HI_SCORE:
-                            break;
-
                         case MENU_CHOICE_GAME_OPTIONS:
                             SoundPause();
                             BottomScreenOptions();
@@ -1547,54 +1537,61 @@ void IllusionDSRunEmu(void)
                             SoundUnPause();
                             break;
 
-                        case MENU_CHOICE_SAVE_GAME:
+                        case MENU_CHOICE_SAVE_GAME1:
                             if (!SaveNow)
                             {
                                 SoundPause();
                                 if (showMessage("DO YOU REALLY WANT TO", "SAVE GAME STATE ?") == ID_SHM_YES)
                                 {
                                     SaveNow = 1;
-                                    msxSaveState();
+                                    msxSaveState(1);
+                                }
+                                BottomScreenKeypad();
+                                SoundUnPause();
+                            }
+                            break;
+                            
+                        case MENU_CHOICE_SAVE_GAME2:
+                            if (!SaveNow)
+                            {
+                                SoundPause();
+                                if (showMessage("DO YOU REALLY WANT TO", "SAVE GAME STATE ?") == ID_SHM_YES)
+                                {
+                                    SaveNow = 1;
+                                    msxSaveState(2);
                                 }
                                 BottomScreenKeypad();
                                 SoundUnPause();
                             }
                             break;
 
-                        case MENU_CHOICE_LOAD_GAME:
+
+                        case MENU_CHOICE_LOAD_GAME1:
                             if (!LoadNow)
                             {
                                 SoundPause();
                                 if (showMessage("DO YOU REALLY WANT TO", "LOAD GAME STATE ?") == ID_SHM_YES)
                                 {
                                     LoadNow = 1;
-                                    msxLoadState();
+                                    msxLoadState(1);
                                 }
                                 BottomScreenKeypad();
                                 SoundUnPause();
                             }
                             break;
 
-                        case MENU_CHOICE_SWAP_DISK:
-                            SoundPause();
-                            BottomScreenOptions();
-                            IllusionDSChooseFile(MEDIA_DISK, 0); // Swap disk but do NOT allow directory change
-                            if (ucGameChoice >= 0)               // Did the user select a game?
+                        case MENU_CHOICE_LOAD_GAME2:
+                            if (!LoadNow)
                             {
-                                BottomScreenOptions();
-                                DSPrint(11, 13, 6, "LOADING...");
-                                // -------------------------------------------------------------------------
-                                // Do NOT save this new disk/filename into MyMedia[].filename as it would
-                                // overwrite the master. Same for filecrc. Instead we save it into filename2
-                                // which always represents the current file for the disk swapped in.
-                                // -------------------------------------------------------------------------
-                                strcpy(MyMedia[MEDIA_DISK].currdisk, gpFic[ucGameChoice].szName);
-                                MyMedia[MEDIA_DISK].filesize = ReadFileCarefully(MyMedia[MEDIA_DISK].currdisk, DISK_Memory, (MAX_DISK_SIZE_KB * 1024), 0, NULL);
-                                fdc_init(1, (MyMedia[MEDIA_DISK].filesize / 1024 == 360) ? 1 : 2, 80, 9, 512, 1, DISK_Memory, NULL);
-                                fdc_reset(false);
+                                SoundPause();
+                                if (showMessage("DO YOU REALLY WANT TO", "LOAD GAME STATE ?") == ID_SHM_YES)
+                                {
+                                    LoadNow = 1;
+                                    msxLoadState(2);
+                                }
+                                BottomScreenKeypad();
+                                SoundUnPause();
                             }
-                            BottomScreenKeypad();
-                            SoundUnPause();
                             break;
 
                         default:
@@ -1675,28 +1672,6 @@ void IllusionDSRunEmu(void)
                 WAITVBL; WAITVBL; WAITVBL; WAITVBL; WAITVBL; WAITVBL;
                 DSPrint(28, 0, 6, "   ");
                 DSPrint(28, 1, 6, "   ");
-            }
-            else if ((nds_key & KEY_R) && (nds_key & (KEY_UP | KEY_DOWN))) // Move screen
-            {
-                if (!screen_position_dampen)
-                {
-                    if (nds_key & KEY_UP)
-                    {
-                        if (myConfig.yOffset < (myConfig.overscan ? 32 : 20))
-                        {
-                            myConfig.yOffset++;
-                        }
-                    }
-                    else if (nds_key & KEY_DOWN)
-                    {
-                        if (myConfig.yOffset > 0)
-                        {
-                            myConfig.yOffset--;
-                        }
-                    }
-                    screen_position_dampen = 8;
-                    save_config = 0;
-                }
             }
             else if (nds_key & (KEY_UP | KEY_DOWN | KEY_LEFT | KEY_RIGHT | KEY_A | KEY_B | KEY_START | KEY_SELECT | KEY_R | KEY_L | KEY_X | KEY_Y))
             {
@@ -1857,30 +1832,6 @@ void IllusionDSRunEmu(void)
                             {
                                 kbd_key = KBD_KEY_F5;
                             }
-                            else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PANUP)
-                            {
-                                if ((VDP[9] & 0x80) || myConfig.overscan)
-                                {
-                                    temp_offset = -myConfig.yOffset;
-                                    slide_dampen = 15;
-                                }
-                            }
-                            else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PANDN)
-                            {
-                                if ((VDP[9] & 0x80) || myConfig.overscan)
-                                {
-                                    temp_offset = ((myConfig.overscan ? 32 : 20) - myConfig.yOffset);
-                                    slide_dampen = 15;
-                                }
-                            }
-                            else if (keyCoresp[myConfig.keymap[i]] == META_KBD_SHOWTOP)
-                            {
-                                myConfig.yOffset = 0;
-                            }
-                            else if (keyCoresp[myConfig.keymap[i]] == META_KBD_SHOWBOT)
-                            {
-                                myConfig.yOffset = (myConfig.overscan ? 32 : 20);
-                            }
 
                             if (kbd_key != 0)
                             {
@@ -2020,8 +1971,9 @@ void restore_lcd(void)
     REG_BLDY_SUB = 0;
 
     swiWaitForVBlank();
-    
-    // Restore Upper? TBD?
+
+    // Ensure upper screen is correct...
+    UpperScreenMainMenu();
 }
 
 /*********************************************************************************
@@ -2125,8 +2077,7 @@ void BottomScreenKeypad(void)
         // Decompress into RAM and then do the copy... this prevents the
         // graphics from flashing/garbage while the decompress happens.
         // --------------------------------------------------------------
-        memcpy((u8 *)0x06880000, RAM_Memory+0x70000, 0x10000); // Save RAM so we can reuse the buffer for decompression
-        decompress(tiles, RAM_Memory+0x70000, LZ77);
+        decompress(tiles, COMPRESS_BUFFER, LZ77);
         decompress(map, kbdMapBuf, LZ77);
 
         // Get uncompressed byte sizes from the LZ77 headers.
@@ -2136,7 +2087,7 @@ void BottomScreenKeypad(void)
         u32 tileSize = t[1] | ((u32)t[2] << 8) | ((u32)t[3] << 16);
         u32 mapSize = m[1] | ((u32)m[2] << 8) | ((u32)m[3] << 16);
 
-        DC_FlushRange(RAM_Memory+0x70000, tileSize);
+        DC_FlushRange(COMPRESS_BUFFER, tileSize);
         DC_FlushRange(kbdMapBuf, mapSize);
 
         swiWaitForVBlank(); // Draw during VBLANK to avoid artifacts
@@ -2145,7 +2096,7 @@ void BottomScreenKeypad(void)
         bgHide(bg1b);
 
         // Copy only the actual decompressed data.
-        dmaCopy(RAM_Memory+0x70000, bgGetGfxPtr(bg0b), tileSize);
+        dmaCopy(COMPRESS_BUFFER, bgGetGfxPtr(bg0b), tileSize);
         dmaCopy(kbdMapBuf, bgGetMapPtr(bg0b), mapSize);
 
         // Preserve the original map offset and copy size.
@@ -2156,8 +2107,6 @@ void BottomScreenKeypad(void)
 
         bgShow(bg0b);
         bgShow(bg1b);
-
-        memcpy(RAM_Memory+0x70000, (u8 *)0x06880000, 0x10000); // Restore previous RAM buffer
     }
 
     unsigned short dmaVal = *(bgGetMapPtr(bg1b) + 24 * 32);
@@ -2273,7 +2222,7 @@ int main(int argc, char **argv)
     }
 
     // -----------------------------------------------------------------
-    // Allocate the Large DSi buffer for expanded RAM banking...
+    // Allocate the Large DSi buffer for expanded ASCII16-X banking...
     // -----------------------------------------------------------------
     if (isDSiMode())
     {
@@ -2289,6 +2238,7 @@ int main(int argc, char **argv)
         }        
     }
     
+    // The RAM for our fake Turbo-R is 512K
     RAM_Memory = malloc(512 * 1024);
 
     // Clear out the ROM memory with all 0xFF values...
@@ -2342,7 +2292,6 @@ int main(int argc, char **argv)
     // Get into the best directory possible...
     // ----------------------------------------
     chdir("/roms"); // Try to start in roms area... doesn't matter if it fails
-    chdir("msx");   // And try to start in the subdir /msx... doesn't matter if it fails.
 
     // -----------------------------------------------------
     // Make sure we have true-ish random number generation
@@ -2358,9 +2307,9 @@ int main(int argc, char **argv)
         
         // Read in the one Illusion City ASCII16-X ROM
         // Try with and without spaces...
-        if (LoadGameIntoMedia(MEDIA_CART1, "/roms/Illusion City.rom") == 0)
+        if (LoadGameIntoMedia(MEDIA_CART1, "Illusion City.rom") == 0)
         {
-            if (LoadGameIntoMedia(MEDIA_CART1, "/roms/IllusionCity.rom") == 0)
+            if (LoadGameIntoMedia(MEDIA_CART1, "IllusionCity.rom") == 0)
             {
                 ShowWarning(2);
                 for (;;) {WAITVBL;}
@@ -2473,7 +2422,7 @@ void msxUpdateScreen(void)
 {
     if (!skip_render)
     {
-        dmaCopyWordsAsynch(2, (u32 *)XBuf[(drawn_frame_number + 1) & 1], (u32 *)DS_LCD_VRAM_1, (myConfig.overscan ? (256 * 224) : (256 * 212)));
+        dmaCopyWordsAsynch(2, (u32 *)XBuf[(drawn_frame_number + 1) & 1], (u32 *)DS_LCD_VRAM_1, (256 * 212));
     }
 
     skip_render = 0;

@@ -53,14 +53,11 @@ struct __attribute__((__packed__)) GlobalConfig_t
     char reserved1[MAX_FILE_NAME_LEN+1];
     char reserved2[MAX_FILE_NAME_LEN+1];
     u8  showFPS;
-    u8  bShowInstructions;
-    u8  bDiskSounds;
-    u8  bShowPSG;
+    u8  global_0;
+    u8  global_1;
+    u8  global_2;
     u8  global_3;
     u8  global_4;
-    u8  global_5;
-    u8  global_6;
-    u8  global_7;
     u8  debugger;
     u32 config_checksum;
 };
@@ -69,41 +66,19 @@ struct __attribute__((__packed__)) Config_t
 {
     u32 game_crc;
     u8  keymap[12];
-    u8  msxMapper;
-    u8  machineType;
     u8  autoFire;
     u8  keyboard;
     u8  maxSprites;
-    u8  dpad;
-    u8  expansion;
     u8  yOffset;
-    u8  cpuBoost;
-    u8  scaleScreen;
     u8  frameSkip;
     u8  ymScale;
-    u8  overscan;
     u8  reserved1;
     u8  reserved2;
     u8  reserved3;
     u8  reserved4;
-    u8  reserved5;
-    u8  reserved6;
-    u8  reserved7;
 };
 
-#define COMPRESS_BUFFER ((u8 *)(ROM_Memory + (MAX_CART_SIZE_KB * 1024) - (256 * 1024)))   // We use the back-end 256K of the ROM buffer for compression
-
 #define NORAM                       0xFF    // When reading IO that is unmapped... we just return 0xFF
-
-#define MACHINE_MSX2                0x00    // Standard MSX2 slot layout (slot 3 expanded with RAM in slot 3-3)
-#define MACHINE_MSX1                0x01    // Standard MSX1 slot layout (nothing expanded, RAM in Slot 2)
-
-#define EXP_NONE                    0       // No special expansion
-#define EXP_FM_PAC                  1       // FM PAC / MSX-MUSIC
-#define EXP_SCC_PLUS                2       // SCC-I / SCC+
-#define EXP_2XPSG                   3       // 2x PSG Mode
-#define EXP_BEEPER                  4       // Beeper Active (yeah, not really an expansion but...)
-#define EXP_MEGARAM                 5       // MegaRAM SCC 512K/1MB
 
 #define FS_NONE                     0       // No Frame Skip
 #define FS_LIGHT                    1       // Light Frame Skip
@@ -121,10 +96,7 @@ extern u8 special_memory_access;                // 0x00 if no special access, ot
 
 #define SPEC_MEM_SUBSLOT_ACTIVE     0x01        // Allows read/write to special SubSlot register at 0xFFFF
 #define SPEC_MEM_SUBSLOT0_ACTIVE    0x02        // Allows read/write to special SubSlot register at 0xFFFF
-#define SPEC_MEM_SCC_ENABLED        0x04        // SCC is enabled and requires memory traps
-#define SPEC_MEM_SCC_PLUS_ENABLED   0x08        // SCC+ is enabled and requires memory traps
-#define SPEC_MEM_SUPERLR_ACTIVE     0x10        // Super Lode Runner traps on writes to 0x0000 even if the cart isn't mapped in!
-#define SPEC_MEM_DISK_CONTROLLER    0x20        // Standard Memory-Mapped Disk Controller active in Page 1
+#define SPEC_MEM_DISK_CONTROLLER    0x04        // Standard Memory-Mapped Disk Controller active in Page 1
 
 extern u8 last_special_key;
 extern u8 last_special_key_dampen;
@@ -139,6 +111,8 @@ extern FI_MSX gpFic[MAX_FILES];
 extern int ucGameAct;
 extern int ucGameChoice;
 
+extern u8 COMPRESS_BUFFER[];
+
 extern u8 msx_caps_lock;
 extern u8 msx_kana_lock;
 extern u8 mirror_ram_bank[4];
@@ -149,7 +123,6 @@ extern u8 mirror_ram_bank[4];
 #define ASC16           1
 #define FMPAC_SRAM      2  // For our special FM-PAC 'Cart'
 #define END_MAPPERS     3
-
 
 #define    MAX_CART_SIZE_KB     4096    // 4MB so we can load Illusion City
 #define    MAX_DISK_SIZE_KB     720     // Disks are 360K or 720K
@@ -163,26 +136,11 @@ extern u8 TURBO_FMPAC[16*1024];
 extern u8 TURBO_DISK[16*1024];
 extern u8 SRAM_Memory[0x2000];
 
-typedef struct
-{
-    uint16_t current_position;    // host position, 0..300 or so
-    uint8_t  button_pressed;
-
-    uint16_t shift_register;     // 9-bit value
-
-    uint8_t last_pin6_state;
-    uint8_t last_pin8_state;
-} ArkanoidPaddle;
-
-extern ArkanoidPaddle myPaddle;
-
 extern u8 bCartInPage[4];
 extern u8 bRAMInPage[4];
 extern u8 *MSXCartPtr[2][8];
 extern u8 *MSXRamPtr[8];
 extern u8 *MemoryMap[8];
-extern u8  sccplus_page[4];
-extern u8  sccplus_mode;
 extern AY38910 myAY;
 extern YM      myYM;
 extern u8 msx_scc_enable;
@@ -213,8 +171,8 @@ extern u8 zoom_screen;
 extern void Loop9938(void);
 extern void msxUpdateScreen(void);
 extern void LoadFileAndComputeCRC(u8 media_id);
-extern void msxLoadState();
-extern void msxSaveState();
+extern void msxLoadState(u8 gameNum);
+extern void msxSaveState(u8 gameNum);
 extern void msxWipeRAM(void);
 extern void msx_reset(void);
 extern void msx_restore_bios(void);
