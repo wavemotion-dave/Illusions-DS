@@ -1,0 +1,80 @@
+// =====================================================================================
+// Copyright (c) 2026 Dave Bernazzani (wavemotion-dave)
+//
+// Copying and distribution of this emulator, its source code and associated
+// readme files, with or without modification, are permitted in any medium without
+// royalty provided this copyright notice is used and wavemotion-dave and
+// Marat Fayzullin (fMSX core) are thanked profusely.
+//
+// The Illusions-DS emulator is offered as-is, without any warranty. Please see readme.md
+// =====================================================================================
+#include <nds.h>
+#include <stdio.h>
+#include <maxmod9.h>
+
+#include "MSX_generic.h"
+
+#include "soundbank.h"
+#include "intro_tbg0.h"
+#include "intro_bg0.h"
+#include "printf.h"
+
+mm_sfxhand intro_music_handle = 0;
+
+void vblankIntro() 
+{
+  vusCptVBL++; // Simple timing for the intro screen to show
+}
+
+void stop_intro_music(void)
+{
+    if (intro_music_handle) mmEffectCancel(intro_music_handle); 
+}
+
+// --------------------------------------------------------------
+// Intro with portabledev logo and new PHEONIX-EDITION version
+// --------------------------------------------------------------
+void intro_logo(void)
+{
+  bool bOK;
+
+  // Init graphics
+  videoSetMode(MODE_0_2D | DISPLAY_BG0_ACTIVE );
+  videoSetModeSub(MODE_0_2D | DISPLAY_BG0_ACTIVE );
+  vramSetBankA(VRAM_A_MAIN_BG); vramSetBankC(VRAM_C_SUB_BG);
+  irqSet(IRQ_VBLANK, vblankIntro);
+  irqEnable(IRQ_VBLANK);
+  
+  // Init BG
+  int bg1 = bgInit(0, BgType_Text8bpp, BgSize_T_256x256, 31,0);
+
+  // Init sub BG
+  int bg1s = bgInitSub(0, BgType_Text8bpp, BgSize_T_256x256, 31,0);
+
+  REG_BLDCNT = BLEND_FADE_BLACK | BLEND_SRC_BG0 | BLEND_DST_BG0; REG_BLDY = 16;
+  REG_BLDCNT_SUB = BLEND_FADE_BLACK | BLEND_SRC_BG0 | BLEND_DST_BG0; REG_BLDY_SUB = 16;
+  
+  memset((u8 *)0x06000000, 0x00, 0x40000); // Ensure screen is clear... (LCD_A and LCD_B)
+    
+  intro_music_handle = mmEffect(SFX_MUS_INTRO);
+
+  // Show portabledev
+  decompress(intro_tbg0Tiles, bgGetGfxPtr(bg1), LZ77Vram);
+  decompress(intro_tbg0Map, (void*) bgGetMapPtr(bg1), LZ77Vram);
+  dmaCopy((void *) intro_tbg0Pal,(u16*) BG_PALETTE,256*2);
+
+  decompress(intro_bg0Tiles, bgGetGfxPtr(bg1s), LZ77Vram);
+  decompress(intro_bg0Map, (void*) bgGetMapPtr(bg1s), LZ77Vram);
+  dmaCopy((void *) intro_bg0Pal,(u16*) BG_PALETTE_SUB,256*2);
+
+  FadeToColor(0,BLEND_FADE_BLACK | BLEND_SRC_BG0 | BLEND_DST_BG0,3,0,3);
+
+  bOK=false;
+  while (!bOK) { if ( !(keysCurrent() & 0x1FFF) ) bOK=true; } // 0x1FFF = key or touch screen
+  vusCptVBL=0;bOK=false;
+  while (!bOK && (vusCptVBL<3*60)) { if (keysCurrent() & 0x1FFF ) bOK=true; }
+  bOK=false;
+  while (!bOK) { if ( !(keysCurrent() & 0x1FFF) ) bOK=true; }
+}
+
+// End of file

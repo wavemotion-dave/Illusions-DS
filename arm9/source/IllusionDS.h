@@ -1,0 +1,226 @@
+// =====================================================================================
+// Copyright (c) 2026 Dave Bernazzani (wavemotion-dave)
+//
+// Copying and distribution of this emulator, it's source code and associated
+// readme files, with or without modification, are permitted in any medium without
+// royalty provided this copyright notice is used and wavemotion-dave and
+// Marat Fayzullin (fMSX core) are thanked profusely.
+//
+// The Illusions-DS emulator is offered as-is, without any warranty.
+// =====================================================================================
+#ifndef _ILLUSIONDS_H_
+#define _ILLUSIONDS_H_
+
+#include <nds.h>
+#include <string.h>
+
+extern u32 debug[0x10];
+extern u32 DX, DY;
+
+#define DS_LCD_VRAM_1 ((u16*)0x06000000) // This is where we draw on the DS screen into LCD VRAM - BG2
+#define DS_LCD_VRAM_2 ((u16*)0x06020000) // This is where we draw on the DS screen into LCD VRAM - BG3
+
+// These are the various special icons/menu operations
+#define MENU_CHOICE_NONE         0x00
+#define MENU_CHOICE_RESET_GAME   0x01
+#define MENU_CHOICE_END_GAME     0x02
+#define MENU_CHOICE_SAVE_GAME    0x03
+#define MENU_CHOICE_LOAD_GAME    0x04
+#define MENU_CHOICE_HI_SCORE     0x05
+#define MENU_CHOICE_DEFINE_KEYS  0x06
+#define MENU_CHOICE_GAME_OPTIONS 0x07
+#define MENU_CHOICE_SWAP_DISK    0x08
+#define MENU_CHOICE_MENU         0xFF        // Special brings up a menu of choices
+
+// ------------------------------------------------------------------------------
+// Joystick UP, RIGHT, LEFT, DOWN and the two FIRE buttons are independent...
+// ------------------------------------------------------------------------------
+#define JST_UP              0x0100
+#define JST_RIGHT           0x0200
+#define JST_DOWN            0x0400
+#define JST_LEFT            0x0800
+#define JST_FIRE1           0x1000
+#define JST_FIRE2           0x2000
+
+// -----------------------------------------------------------------------------------
+// And these are meta keys for mapping NDS keys to keyboard keys (many of the computer
+// games don't use joystick inputs and so need to map to keyboard keys...)
+// -----------------------------------------------------------------------------------
+#define META_KBD_A          0xFFFF0001
+#define META_KBD_B          0xFFFF0002
+#define META_KBD_C          0xFFFF0003
+#define META_KBD_D          0xFFFF0004
+#define META_KBD_E          0xFFFF0005
+#define META_KBD_F          0xFFFF0006
+#define META_KBD_G          0xFFFF0007
+#define META_KBD_H          0xFFFF0008
+#define META_KBD_I          0xFFFF0009
+#define META_KBD_J          0xFFFF000A
+#define META_KBD_K          0xFFFF000B
+#define META_KBD_L          0xFFFF000C
+#define META_KBD_M          0xFFFF000D
+#define META_KBD_N          0xFFFF000E
+#define META_KBD_O          0xFFFF000F
+#define META_KBD_P          0xFFFF0010
+#define META_KBD_Q          0xFFFF0011
+#define META_KBD_R          0xFFFF0012
+#define META_KBD_S          0xFFFF0013
+#define META_KBD_T          0xFFFF0014
+#define META_KBD_U          0xFFFF0015
+#define META_KBD_V          0xFFFF0016
+#define META_KBD_W          0xFFFF0017
+#define META_KBD_X          0xFFFF0018
+#define META_KBD_Y          0xFFFF0019
+#define META_KBD_Z          0xFFFF001A
+
+#define META_KBD_0          0xFFFF001B
+#define META_KBD_1          0xFFFF001C
+#define META_KBD_2          0xFFFF001D
+#define META_KBD_3          0xFFFF001E
+#define META_KBD_4          0xFFFF001F
+#define META_KBD_5          0xFFFF0020
+#define META_KBD_6          0xFFFF0021
+#define META_KBD_7          0xFFFF0022
+#define META_KBD_8          0xFFFF0023
+#define META_KBD_9          0xFFFF0024
+
+#define META_KBD_SHIFT      0xFFFF0025
+#define META_KBD_CTRL       0xFFFF0026
+#define META_KBD_KANA       0xFFFF0027
+#define META_KBD_GRAPH      0xFFFF0028
+
+#define META_KBD_SPACE      0xFFFF0029
+#define META_KBD_RETURN     0xFFFF002A
+#define META_KBD_ESC        0xFFFF002B
+#define META_KBD_HOME       0xFFFF002C
+#define META_KBD_UP         0xFFFF002D
+#define META_KBD_DOWN       0xFFFF002E
+#define META_KBD_LEFT       0xFFFF002F
+#define META_KBD_RIGHT      0xFFFF0030
+#define META_KBD_PERIOD     0xFFFF0031
+#define META_KBD_COMMA      0xFFFF0032
+#define META_KBD_COLON      0xFFFF0033
+#define META_KBD_SEMI       0xFFFF0034
+#define META_KBD_QUOTE      0xFFFF0035
+#define META_KBD_SLASH      0xFFFF0036
+#define META_KBD_CARET      0xFFFF0037
+#define META_KBD_MINUS      0xFFFF0038
+#define META_KBD_LBRACKET   0xFFFF0039
+#define META_KBD_RBRACKET   0xFFFF003A
+#define META_KBD_YEN        0xFFFF003B
+#define META_KBD_ATSIGN     0xFFFF003C
+#define META_KBD_BS         0xFFFF003D
+#define META_KBD_TAB        0xFFFF003E
+#define META_KBD_INS        0xFFFF003F
+#define META_KBD_DEL        0xFFFF0040
+#define META_KBD_STOP_BRK   0xFFFF0041
+#define META_KBD_F1         0xFFFF0042
+#define META_KBD_F2         0xFFFF0043
+#define META_KBD_F3         0xFFFF0044
+#define META_KBD_F4         0xFFFF0045
+#define META_KBD_F5         0xFFFF0046
+
+#define META_KBD_PANUP      0xFFFF0047
+#define META_KBD_PANDN      0xFFFF0048
+#define META_KBD_SHOWTOP    0xFFFF0049
+#define META_KBD_SHOWBOT    0xFFFF004A
+
+#define MAX_KEY_OPTIONS     86
+
+#define JOYMODE_JOYSTICK    0
+
+// -----------------------------
+// For the Full Keyboard...
+// -----------------------------
+#define KBD_KEY_UP          1
+#define KBD_KEY_DOWN        2
+#define KBD_KEY_RIGHT       3
+#define KBD_KEY_LEFT        4
+#define KBD_KEY_F1          5
+#define KBD_KEY_F2          6
+#define KBD_KEY_F3          7
+#define KBD_KEY_F4          8
+#define KBD_KEY_F5          9
+#define KBD_KEY_CTRL        10
+#define KBD_KEY_SHIFT       11
+#define KBD_KEY_ESC         12
+#define KBD_KEY_STOP        13
+#define KBD_KEY_SEL         14
+#define KBD_KEY_RET         15
+#define KBD_KEY_DEL         16
+#define KBD_KEY_INS         17
+#define KBD_KEY_CLEAR       18
+#define KBD_KEY_HOME        19
+#define KBD_KEY_QUOTE       20
+#define KBD_KEY_CAPS        21
+#define KBD_KEY_TAB         22
+#define KBD_KEY_BS          23
+#define KBD_KEY_KANA        24
+#define KBD_KEY_GRAPH       25
+#define KBD_KEY_DEAD        26
+#define KBD_KEY_YEN         27
+
+#define VDP_IRQ_VBLANK      0x01
+#define VDP_IRQ_LINE        0x02
+
+#define WAITVBL swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank();
+
+extern u16 emuFps;
+extern u16 emuActFrames;
+extern u16 timingFrames;
+
+#define MAX_FILES                   512     // Max files per directory (.ROM and .DSK)
+#define MAX_FILE_NAME_LEN           160     // Max size of any single filename
+#define MAX_PATH_NAME_LEN           200     // Max path size to drill down into
+
+typedef struct
+{
+    char    filename[MAX_FILE_NAME_LEN];    // Always uppercase to help strstr()
+    char    filepath[MAX_PATH_NAME_LEN];    // Where the file was found on the SD card
+    char    currdisk[MAX_FILE_NAME_LEN];    // Current disk name - since we can swap disks
+    u32     filesize;                       // How big this file was (0 if no file in this slot)
+    u32     filecrc;                        // The CRC32 of the file (0 if no file in this slot)
+    u8      mapperType;                     // Mapper type for the CARTs (Disk will always be 0x00)
+    u8      mapperMask;                     // Mapper mask for the CARTs (Disk will always be 0x00)
+    u16     blockSize;                      // Mapper block size... 0x2000 (8K) or 0x4000 (16K)
+} Media_t;
+
+#define MEDIA_CART1     0
+#define MEDIA_CART2     1
+#define MEDIA_DISK      2
+
+extern Media_t MyMedia[3]; // Cart1, Cart2 and Disk possibilities
+
+extern u16 nds_key;
+extern u8  kbd_key;
+extern u8 kbd_keys_pressed;
+extern u8 kbd_keys[12];
+extern volatile u16 vusCptVBL;
+extern u32 keyCoresp[MAX_KEY_OPTIONS];
+extern u8 soundEmuPause;
+extern u8 skip_render;
+extern int bg0, bg1, bg0b, bg1b;
+extern u8 io_show_status;
+extern u8 sram_show_status;
+extern u8 flash_show_status;
+
+extern void BottomScreenOptions(void);
+extern void BottomScreenMiniMenu(void);
+extern void BottomScreenMainMenu(void);
+extern void BottomScreenKeypad(void);
+extern void PauseSound(void);
+extern void UnPauseSound(void);
+extern void ReadFileAndLoadConfig(u8 media_id);
+extern void DisplayStatusLine(void);
+extern void ResetMSX(void);
+extern void FindConfig(void);
+extern void SetVDPIRQ(u8 bit, u8 set);
+extern u32  GetMasterCRC(void);
+extern char *GetMasterFilename(void);
+extern char *GetMasterPath(void);
+extern u32 LoadGameIntoMedia(u8 media_id, char *filename);
+extern void debug_init();
+extern void debug_save();
+extern void debug_printf(const char * str, ...);
+
+#endif // _ILLUSIONDS_H_
