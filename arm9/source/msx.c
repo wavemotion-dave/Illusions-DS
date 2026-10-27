@@ -459,7 +459,7 @@ ITCM_CODE unsigned char cpu_readport_msx(register u8 Port)
   {
       return (turbo_timer>>8) & 0xFF;
   }
-  else if (Port == 0xE9)
+  else if (Port == 0xE9) // MIDI - not used...
   {
       return 0x05;
   }
@@ -581,21 +581,20 @@ void msx_slot_map_turboR(unsigned char Value)
         case 0x03:  // Slot 3:  Expanded slot has the Disk Controller in subslot 1
             bCartInPage[1] = 0;
             bRAMInPage[1] = 0;
-
-            if (((msx_subslot & 0x0C) >> 2) == 2) // Subslot 2 has Disk Driver
+            if (((msx_subslot & 0x0C) >> 2) == 0) // Subslot 0 has RAM Mapper
+            {
+                bCartInPage[1] = 0;
+                bRAMInPage[1] = 1;
+                MemoryMap[2] = (u8 *)(MSXRamPtr[2]) - 0x4000;
+                MemoryMap[3] = (u8 *)(MSXRamPtr[3]) - 0x6000;
+            }
+            else if (((msx_subslot & 0x0C) >> 2) == 2) // Subslot 2 has Disk Driver
             {
                 special_memory_access |= SPEC_MEM_DISK_CONTROLLER;
                 bCartInPage[1] = 0;
                 bRAMInPage[1] = 0;
                 MemoryMap[2] = (u8 *)TURBO_DISK+0x0000 - 0x4000;
                 MemoryMap[3] = (u8 *)TURBO_DISK+0x2000 - 0x6000;
-            }
-            else if (((msx_subslot & 0x0C) >> 2) == 0) // Subslot 0 has RAM Mapper
-            {
-                bCartInPage[1] = 0;
-                bRAMInPage[1] = 1;
-                MemoryMap[2] = (u8 *)(MSXRamPtr[2]) - 0x4000;
-                MemoryMap[3] = (u8 *)(MSXRamPtr[3]) - 0x6000;
             }
             else // Other subslots have nothing in this page
             {
@@ -700,15 +699,15 @@ ITCM_CODE void cpu_writeport_msx(register u8 Port,register unsigned char Value)
     else if (Port == 0xB4) {write_port_RTC_index(Value);}       // RTC Area (index register)
     else if (Port == 0xB5) {write_port_RTC_data(Value);}        // RTC Area (data register)
     else if (Port == 0xF4) {last_f4 = Value;}
-    else if (Port == 0xE4)
+    else if (Port == 0xE4) // S1990 register index
     {
         s1990_reg_idx = Value & 0xF;
     }
-    else if (Port == 0xE5)
+    else if (Port == 0xE5) // S1990 register access
     {
         s1990_reg[s1990_reg_idx] = Value;
     }
-    else if (Port == 0xE6)
+    else if (Port == 0xE6) // Reset the Turbo-R timer
     {
         turbo_timer = 0;
     }

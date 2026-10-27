@@ -6,6 +6,8 @@ The only other file needed is the 4MB ASCII16-X ROM of Illusion City as produced
 
 Place this file exactly named "Illusion City.rom" in the /roms folder on your SD card.
 
+![Main Menu](images/menu.png)
+
 
 # Donations Welcome (but never required!)
 

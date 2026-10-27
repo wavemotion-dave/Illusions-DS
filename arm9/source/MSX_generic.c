@@ -304,7 +304,7 @@ void SetDefaultGameConfig(void)
     myConfig.keyboard = OVL_FULLKBD;            // Default to normal full MSX keyboard
     myConfig.maxSprites = 1;                    // 0 means limit to the original 4/8 sprites of the VDP, 1 means 32 sprites for emulation
     myConfig.yOffset = 2;                       // Small offset to help compressed Illusion City screens look their best
-    myConfig.frameSkip = 1;                     // Light frameskip for Illusion City
+    myConfig.frameSkip = 1;                     // Light frameskip is needed for Illusion City
     myConfig.ymScale = YM_BAL_MAX;              // Normal YM is scaled to be the loudest
     myConfig.reserved1 = 0;
     myConfig.reserved2 = 0;
@@ -356,7 +356,7 @@ const struct options_t Option_Table[2][20] =
 {
     // Page 1 - Game Options
     {
-        {"FRAMESKIP",       {"NONE", "LIGHT"},                                  &myConfig.frameSkip,         2},
+        {"FRAMESKIP",       {"DISABLED", "ENABLED"},                            &myConfig.frameSkip,         2},
         {"YM BALANCE",      {"LOW", "MEDIUM", "HIGH", "MAX"},                   &myConfig.ymScale,           4},
         {"FPS",             {"OFF", "ON", "ON FULLSPEED"},                      &myGlobalConfig.showFPS,     3},
         {"DEBUGGER",        {"OFF", "FULL DEBUG"},                              &myGlobalConfig.debugger,    2},
