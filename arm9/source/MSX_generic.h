@@ -104,7 +104,6 @@ extern u16 msx_init;
 extern u16 msx_basic;
 extern u8 skip_render;
 extern u16 timingFrames;
-extern s8 temp_offset;
 extern u8 render_blended;
 
 extern FI_MSX gpFic[MAX_FILES];
@@ -200,7 +199,6 @@ extern u8   IllusionDSChooseFile(u8 media_id, u8 allow_dir_change);
 extern u8   showMessage(char *szCh1, char *szCh2);
 extern u32  LoopZ80(void);
 extern void msxInit(void);
-extern void SaveConfig(bool bShow);
 extern void IndirectRegWrite9938(u8 Value);
 extern void EnsureSaveDirectory(void);
 extern void intro_logo(void);

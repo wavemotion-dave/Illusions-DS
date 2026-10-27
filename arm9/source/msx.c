@@ -33,31 +33,23 @@ u8 bRAMInPage[4]            __attribute__((section(".dtcm"))) = {0,0,0,0};
 u8 *MSXCartPtr[2][8]        __attribute__((section(".dtcm"))) = { {0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0} };
 u8 *MSXRamPtr[8]            __attribute__((section(".dtcm"))) = {0,0,0,0,0,0,0,0};
 
-u16 beeperFreq              __attribute__((section(".dtcm"))) = 0;      // Crude square wave beeper handling. Not much uses this.
 u8 msx_music_capable_game   __attribute__((section(".dtcm"))) = 0;      // True if game is making use of MSX-MUSIC (YM Sound)
 u8 special_memory_access    __attribute__((section(".dtcm"))) = 0x00;   // This lets us know we've got something special mapped into memory
 u32 msx_music_writes        __attribute__((section(".dtcm"))) = 0;      // If we cross a threshold, we decare we are MSX-MUSIC capable (and mix in the proper sound)
 u8 msx_subslot              __attribute__((section(".dtcm"))) = 0x00;   // Only one slot is expanded so we only need to track one register here
 u8 msx_subslot0             __attribute__((section(".dtcm"))) = 0x00;   // Only one slot is expanded so we only need to track one register here
-u16 turbo_timer             __attribute__((section(".dtcm"))) = 0x0000; // Rough Turbo-R timer handling
+u16 turbo_timer             __attribute__((section(".dtcm"))) = 0x0000; // Rough Turbo-R timer handling - advanced 16 ticks every scanline.
 AY38910 myAY                __attribute__((section(".dtcm")));          // Declare new AY structure for basic MSX sounds
 YM      myYM                __attribute__((section(".dtcm")));          // Declare new YM module (MSX-MUSIC) for MSX games that use it
 
+// Some Turbo-R Specific handlers... very bare bones!
 u8 last_f4 = 0x00;
-u8 turbo_idx=0;
-u8 turbo_reg[256] = {0};
-
-// ---------------------------------------------------------------------
-// Konami SCC+ 64K RAM Cartridge (flash-cart style: 8x8K RAM pages)
-// ---------------------------------------------------------------------
-u8  sccplus_page[4]     __attribute__((section(".dtcm"))) = {0,1,2,3}; // Last byte written to each of the 4 select regs
-u8  sccplus_mode        __attribute__((section(".dtcm"))) = 0x00;      // BFFE/BFFF: bit5=RAM mode, bit4=SCC+ compat
+u8 s1990_reg_idx=0;
+u8 s1990_reg[16] = {0};
 
 // --------------------------------------------------------------------------
 // These aren't used very often so we don't need them in fast .dtcm memory
 // --------------------------------------------------------------------------
-u16 msx_init            = 0x4000;
-u16 msx_basic           = 0x0000;
 u8 mirror_ram_bank[4]   = {3,2,1,0}; // For port readback mostly... though not all MSX2 machines report it back.
 
 u8 Unmapped_Memory[0x2000]; // Full of 0xFF values. We point all memory segments here that are not mapped to some other device.
@@ -452,11 +444,11 @@ ITCM_CODE unsigned char cpu_readport_msx(register u8 Port)
   }
   else if (Port == 0xE4)
   {
-      return turbo_idx;
+      return s1990_reg_idx;
   }
   else if (Port == 0xE5)
   {
-      u8 val = turbo_reg[turbo_idx];
+      u8 val = s1990_reg[s1990_reg_idx];
       return val;
   }
   else if (Port == 0xE6)
@@ -497,7 +489,7 @@ ITCM_CODE unsigned char cpu_readport_msx(register u8 Port)
 // 4000h~7FFFh    Main-ROM      Cart1       Cart2       ---        Disk-ROM    MSX-Music   16K RAM
 // 0000h~3FFFh    Main-ROM      Cart1       Cart2       Ext-ROM    ---         ---         16K RAM
 //--------------------------------------------------------------------------------------------------
-void msx_slot_map_msx2(unsigned char Value)
+void msx_slot_map_turboR(unsigned char Value)
 {
     special_memory_access &= ~SPEC_MEM_SUBSLOT_ACTIVE;  // Until proven otherwise below...
     special_memory_access &= ~SPEC_MEM_SUBSLOT0_ACTIVE; // Until proven otherwise below...
@@ -710,11 +702,11 @@ ITCM_CODE void cpu_writeport_msx(register u8 Port,register unsigned char Value)
     else if (Port == 0xF4) {last_f4 = Value;}
     else if (Port == 0xE4)
     {
-        turbo_idx = Value;
+        s1990_reg_idx = Value & 0xF;
     }
     else if (Port == 0xE5)
     {
-        turbo_reg[turbo_idx] = Value;
+        s1990_reg[s1990_reg_idx] = Value;
     }
     else if (Port == 0xE6)
     {
@@ -722,7 +714,7 @@ ITCM_CODE void cpu_writeport_msx(register u8 Port,register unsigned char Value)
     }
     else if (Port == 0xA8) // Slot system for MSX
     {
-        msx_slot_map_msx2(Value);
+        msx_slot_map_turboR(Value);
         Port_PPI_A = Value;
     }
     else if (Port == 0xA9)  // PPI - Register B
@@ -905,15 +897,8 @@ void msx_restore_bios(void)
 void msx_reset(void)
 {
     last_f4 = 0x00;
-    msx_init = 0x4000;
-    msx_basic = 0x0000;
 
     MSX_InitialMemoryLayout();
-}
-
-int GetSizeSRAM(void)
-{
-    return 0x2000; // This covers 2K to 8K which is very typical...
 }
 
 // -------------------------------------------------------------------
@@ -942,7 +927,7 @@ void msxSaveSRAM(void)
     if (handle != NULL)
     {
         // SRAM is up to 32K in size...
-        fwrite(SRAM_Memory, GetSizeSRAM(), 1, handle);
+        fwrite(SRAM_Memory, sizeof(SRAM_Memory), 1, handle);
         fclose(handle);
     }
 }

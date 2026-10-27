@@ -52,7 +52,6 @@ u32 DX = 0;
 u32 DY = 0;
 
 u32 last_vsync_count    __attribute__((section(".dtcm"))) = 0xFEEDBEEF;
-s8 temp_offset          __attribute__((section(".dtcm"))) = 0;
 u8 slide_dampen         __attribute__((section(".dtcm"))) = 0;
 u8 skip_render          __attribute__((section(".dtcm"))) = 0;
 u8 zoom_screen          __attribute__((section(".dtcm"))) = 0;
@@ -223,11 +222,9 @@ void SoundUnPause(void)
     soundEmuPause = 0;
 }
 
-// --------------------------------------------------------------------------------------------
+// --------------------------------------------------------------
 // MAXMOD streaming setup and handling...
-// We were using the normal ARM7 sound core but it sounded "scratchy" and so with the help
-// of FluBBa, we've swiched over to the maxmod sound core which performs much better.
-// --------------------------------------------------------------------------------------------
+// --------------------------------------------------------------
 #define sample_rate (31050)    // To match the sound driver - this is good enough quality for the DS
 #define buffer_size (512 + 16) // Enough buffer that we don't have to fill it too often. Must be multiple of 16.
 
@@ -242,7 +239,7 @@ mm_stream myStream __attribute__((section(".dtcm")));
 s16 last_sample __attribute__((section(".dtcm"))) = 0;
 
 // ------------------------------------------------------------------------------------------------------------
-// On exit from Sound Pause and whenever the sound driver changes (AY -> AY+SCC or AY+MSX-MUSIC), there is a
+// On exit from Sound Pause and whenever the sound driver changes (AY -> AY+MSX-MUSIC), there is a short
 // pop/click heard as the new mixer comes online. This routine is designed to perform a simple quick mixing
 // and drive the sample output towards the new target to soften the pop/click. It's not perfect but it helps...
 // ------------------------------------------------------------------------------------------------------------
@@ -284,7 +281,7 @@ mm_word ClickRemoval(mm_word len, mm_addr dest)
 
 // -----------------------------------------------------------------------------------------------
 // This is our main sound mixer. It's called periodically by the maxmod handler when it needs
-// more samples in the buffer. We generally produce AY output but sometimes mix in SCC or beeper.
+// more samples in the buffer. We mix AY + MSX-MUSIC as that's the sound setup for Illusion City.
 // -----------------------------------------------------------------------------------------------
 ITCM_CODE mm_word OurSoundMixer(mm_word len, mm_addr dest, mm_stream_formats format)
 {
@@ -1276,15 +1273,6 @@ u8 handle_debugger_overlay(u16 iTx, u16 iTy)
     return MENU_CHOICE_NONE;
 }
 
-// ----------------------------------------------------------------------------
-// Slide-n-Glide D-pad keeps moving in the last known direction for a few more
-// frames to help make those hairpin turns up and off ladders much easier...
-// ----------------------------------------------------------------------------
-u8 slide_n_glide_key_up = 0;
-u8 slide_n_glide_key_down = 0;
-u8 slide_n_glide_key_left = 0;
-u8 slide_n_glide_key_right = 0;
-
 // ------------------------------------------------------------------------
 // The main emulation loop is here... call into the Z80, VDP and PSG
 // ------------------------------------------------------------------------
@@ -1296,8 +1284,6 @@ void IllusionDSRunEmu(void)
     static u32 lastUN = 0;
     static u8 dampenClick = 0;
     u8 meta_key = 0;
-    u8 screen_position_dampen = 0;
-    u8 save_config = 0;
 
     // Setup the debug buffer for DSi use
     debug_init();
@@ -1843,50 +1829,7 @@ void IllusionDSRunEmu(void)
             }
             else // Nothing pressed... let slide-n-glide counters drift down
             {
-                if (slide_n_glide_key_up)
-                {
-                    slide_n_glide_key_up--;
-                }
-                if (slide_n_glide_key_down)
-                {
-                    slide_n_glide_key_down--;
-                }
-                if (slide_n_glide_key_left)
-                {
-                    slide_n_glide_key_left--;
-                }
-                if (slide_n_glide_key_right)
-                {
-                    slide_n_glide_key_right--;
-                }
                 last_mapped_key = 0;
-            }
-
-            // -----------------------------------------------------------------------------
-            // If the user has changed the screen position using the LEFT shoulder key,
-            // we need to save that out. But we do so only if they still aren't doing that.
-            // -----------------------------------------------------------------------------
-            if (save_config)
-            {
-                if ((nds_key & KEY_L) == 0)
-                {
-                    if (--save_config == 0)
-                    {
-                        SaveConfig(FALSE);
-                    }
-                }
-            }
-
-            if (screen_position_dampen)
-            {
-                if (--screen_position_dampen == 0)
-                {
-                    save_config = 60; // Save config in 1 second
-                }
-                else
-                {
-                    save_config = 0;
-                }
             }
 
             // ---------------------------------------------------------
@@ -2162,7 +2105,7 @@ ITCM_CODE void irqVBlank(void)
     }
     else
     {
-        cyBG = ((s16)myConfig.yOffset + temp_offset) << 8;
+        cyBG = ((s16)myConfig.yOffset) << 8;
 
         // --------------------------------------------------------------------
         // Compress screen (yuck!). We do a little bit of DS magic here to
@@ -2173,7 +2116,7 @@ ITCM_CODE void irqVBlank(void)
         // looks better than a line of missing pixels. It's not perfect.
         // --------------------------------------------------------------------
         ydyBG = ((212 / 192) << 8) | (212 % 192);
-        if (myConfig.yOffset + temp_offset == 0)
+        if (myConfig.yOffset == 0)
         {
             cyBG = (1 << 8);
         }
@@ -2185,25 +2128,6 @@ ITCM_CODE void irqVBlank(void)
 
     REG_BG2PD = ydyBG;
     REG_BG3PD = ydyBG;
-
-    if (temp_offset)
-    {
-        if (slide_dampen == 0)
-        {
-            if (temp_offset > 0)
-            {
-                temp_offset--;
-            }
-            else
-            {
-                temp_offset++;
-            }
-        }
-        else
-        {
-            slide_dampen--;
-        }
-    }
 }
 
 /*********************************************************************************
@@ -2521,20 +2445,6 @@ u32 LoadGameIntoMedia(u8 media_id, char *filename)
     // --------------------------------------------------------
     FindConfig();
 
-    // ----------------------------------------------------------------------
-    // Let the Loading Screen sit for a second or two so the user sees it...
-    // ----------------------------------------------------------------------
-    if (MyMedia[media_id].filesize <= (256 * 1024)) // Smaller files... add some wait on the Loading Screen
-    {
-        WAITVBL; WAITVBL; WAITVBL; WAITVBL;
-        WAITVBL; WAITVBL; WAITVBL; WAITVBL;
-    }
-    else if (MyMedia[media_id].filesize <= (512 * 1024)) // Slightly larger files... add less wait
-    {
-        WAITVBL; WAITVBL; WAITVBL; WAITVBL;
-    }
-    // And for even bigger files, add no artificial delay (the file load above was long enough!)
-    
     return MyMedia[media_id].filesize;
 }
 
@@ -2555,15 +2465,22 @@ void PatchZ80(register Z80 *r)
 u32 LoopZ80(void)
 {
     // Execute 1 scanline worth of CPU instructions
-    extern u8 turbo_reg[];
+    extern u8 s1990_reg[];
     u32 cycles_to_process = VDP9938_CLOCKS_PER_LINE + CPU.CycleDeficit;
-    if (turbo_reg[6] & 0x40) // DRAM mode if bit is set (faster Z80)
+    
+    // -------------------------------------------------------------------------------
+    // And here is some fake Turbo-R magic... we are essentially giving the
+    // core Z80 more cycles to work with to simulate a semi-Turbo-R experience.
+    // This is NOT accurate emulation but fortunately Illusion City generally
+    // doesn't use any Turbo-R specific CPU / R800 functionality so this kinda works!
+    // -------------------------------------------------------------------------------
+    if (s1990_reg[6] & 0x40) // DRAM mode if bit is set (faster Z80)
     {
-        if (turbo_reg[6] & 0x20) // R800 mode if bit is clear
+        if (s1990_reg[6] & 0x20) // R800 mode if bit is clear
         {
             cycles_to_process += VDP9938_CLOCKS_PER_LINE + 57; // 2.25x Z80 mode
         }
-        else // R800 turbo mode... best we can do is 3x
+        else // R800 turbo mode... best we can do is 3x and remember we don't really have an R800 processor!
         {
             cycles_to_process += (VDP9938_CLOCKS_PER_LINE * 2); // 3x Z80 mode
         }    

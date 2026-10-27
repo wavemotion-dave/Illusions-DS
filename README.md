@@ -34,3 +34,5 @@ Vaneev and used by permission of the generous MIT license.
 The Illusions-DS emulator is offered as-is, without any warranty.
 
 Special thanks to the MSX Translation team for their amazing work!
+
+![MSX Cover](images/cover.png)

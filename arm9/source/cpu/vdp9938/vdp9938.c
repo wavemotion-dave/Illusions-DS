@@ -40,8 +40,7 @@ u8 overscan_trick           __attribute__((section(".dtcm"))) = 0;   // Will be 
 
 u8 frame_draw_mask[3][16]   __attribute__((section(".dtcm"))) = {
                             {1,1,1,1,1,1,1,1,   1,1,1,1,1,1,1,1},  // No frameskip: 100% (every frame drawn)
-                            {1,0,1,0,1,0,1,0,   1,0,1,0,1,0,1,0},  // Light: 50% (every other frame drawn)
-                            {1,0,1,0,0,0,1,0,   0,0,1,0,0,0,1,0}   // Aggressive: 31.2% frames drawn
+                            {1,0,1,0,1,0,1,0,   1,0,1,0,1,0,1,0}   // Light: 50% (every other frame drawn)
                         };
 
 u8 Screen8SpriteByteLUT[256] __attribute__((section(".dtcm"))) =
@@ -1461,6 +1460,7 @@ ITCM_CODE void CommitLine(u8 Y)
         src += 32;
     }
 }
+
 ITCM_CODE void RefreshLine4(uint8_t Y)
 {
     DEBUG_REFRESH(4);
@@ -1649,40 +1649,39 @@ ITCM_CODE void RefreshLine5(u8 uY)
                 u32 s1 = src32[1];
 
                 *dst32++ = nibbleLUT16[s0 & 0xFF]         | (nibbleLUT16[(s0 >> 8)  & 0xFF] << 16);
-                *dst32++ = nibbleLUT16[(s0 >> 16) & 0xFF] | (nibbleLUT16[(s0 >> 24) & 0xFF] << 16);
+                *dst32++ = nibbleLUT16[(s0 >> 16) & 0xFF] | (nibbleLUT16[(s0 >> 24)] << 16);
                 *dst32++ = nibbleLUT16[s1 & 0xFF]         | (nibbleLUT16[(s1 >> 8)  & 0xFF] << 16);
-                *dst32++ = nibbleLUT16[(s1 >> 16) & 0xFF] | (nibbleLUT16[(s1 >> 24) & 0xFF] << 16);
+                *dst32++ = nibbleLUT16[(s1 >> 16) & 0xFF] | (nibbleLUT16[(s1 >> 24)] << 16);
 
                 s0 = src32[2];
                 s1 = src32[3];
 
                 *dst32++ = nibbleLUT16[s0 & 0xFF]         | (nibbleLUT16[(s0 >> 8)  & 0xFF] << 16);
-                *dst32++ = nibbleLUT16[(s0 >> 16) & 0xFF] | (nibbleLUT16[(s0 >> 24) & 0xFF] << 16);
+                *dst32++ = nibbleLUT16[(s0 >> 16) & 0xFF] | (nibbleLUT16[(s0 >> 24)] << 16);
                 *dst32++ = nibbleLUT16[s1 & 0xFF]         | (nibbleLUT16[(s1 >> 8)  & 0xFF] << 16);
-                *dst32++ = nibbleLUT16[(s1 >> 16) & 0xFF] | (nibbleLUT16[(s1 >> 24) & 0xFF] << 16);
+                *dst32++ = nibbleLUT16[(s1 >> 16) & 0xFF] | (nibbleLUT16[(s1 >> 24)] << 16);
 
                 s0 = src32[4];
                 s1 = src32[5];
 
                 *dst32++ = nibbleLUT16[s0 & 0xFF]         | (nibbleLUT16[(s0 >> 8)  & 0xFF] << 16);
-                *dst32++ = nibbleLUT16[(s0 >> 16) & 0xFF] | (nibbleLUT16[(s0 >> 24) & 0xFF] << 16);
+                *dst32++ = nibbleLUT16[(s0 >> 16) & 0xFF] | (nibbleLUT16[(s0 >> 24)] << 16);
                 *dst32++ = nibbleLUT16[s1 & 0xFF]         | (nibbleLUT16[(s1 >> 8)  & 0xFF] << 16);
-                *dst32++ = nibbleLUT16[(s1 >> 16) & 0xFF] | (nibbleLUT16[(s1 >> 24) & 0xFF] << 16);
+                *dst32++ = nibbleLUT16[(s1 >> 16) & 0xFF] | (nibbleLUT16[(s1 >> 24)] << 16);
 
                 s0 = src32[6];
                 s1 = src32[7];
 
                 *dst32++ = nibbleLUT16[s0 & 0xFF]         | (nibbleLUT16[(s0 >> 8)  & 0xFF] << 16);
-                *dst32++ = nibbleLUT16[(s0 >> 16) & 0xFF] | (nibbleLUT16[(s0 >> 24) & 0xFF] << 16);
+                *dst32++ = nibbleLUT16[(s0 >> 16) & 0xFF] | (nibbleLUT16[(s0 >> 24)] << 16);
                 *dst32++ = nibbleLUT16[s1 & 0xFF]         | (nibbleLUT16[(s1 >> 8)  & 0xFF] << 16);
-                *dst32++ = nibbleLUT16[(s1 >> 16) & 0xFF] | (nibbleLUT16[(s1 >> 24) & 0xFF] << 16);
+                *dst32++ = nibbleLUT16[(s1 >> 16) & 0xFF] | (nibbleLUT16[(s1 >> 24)] << 16);
 
                 src32 += 8;
             }
         }
         else
         {
-            debug[1]++;
             u16 *dst16 = (u16*)P;
 
             for (int i = 0; i < 128; i += 8)
@@ -2809,7 +2808,7 @@ ITCM_CODE void Loop9938(void)
           // line will actually be one of the ones rendered to the DS LCD.
           // ---------------------------------------------------------------
           int first_visible_line = VDP9938_START_LINE;
-          if (VDP[9] & 0x80) first_visible_line += myConfig.yOffset+temp_offset;
+          if (VDP[9] & 0x80) first_visible_line += myConfig.yOffset;
 
           if ((CurLine >= first_visible_line) &&  (CurLine < (first_visible_line+ ((VDP[9] & 0x80) ? 212:192))))
           {
