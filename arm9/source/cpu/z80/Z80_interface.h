@@ -10,8 +10,6 @@
 
 extern Z80 CPU;
 
-extern u8 sram_write_enabled_a;
-extern u8 sram_write_enabled_b;
 extern u8 special_memory_access;
 extern u8 FMPAC_SRAM_in_view;
 

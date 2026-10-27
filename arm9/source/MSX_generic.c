@@ -1080,8 +1080,8 @@ void IllusionDSChangeKeymap(void)
     // --------------------------------------------------
     // Give instructions to the user...
     // --------------------------------------------------
-    DSPrint(1, 19, 0, ("   D-PAD : CHANGE KEY MAP    "));
-    DSPrint(1, 20, 0, ("       B : RETURN MAIN MENU  "));
+    DSPrint(1, 20, 0, ("   D-PAD : CHANGE KEY MAP    "));
+    DSPrint(1, 21, 0, ("       B : RETURN MAIN MENU  "));
     DisplayKeymapName(ucY);
 
     bIndTch = myConfig.keymap[0];

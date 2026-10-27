@@ -24,8 +24,6 @@
 #include "../../fdc.h"
 #include "../../printf.h"
 
-u8 sram_write_enabled_a = 0; // Is SRAM writable in segment A (many SRAM games allow writes in 2 segments)
-u8 sram_write_enabled_b = 0; // Is SRAM writable in segment B (many SRAM games allow writes in 2 segments)
 u8 FMPAC_SRAM_in_view   = 0; // Is the FMPAC SRAM in view?
 u8 FMPAC_Key1           = 0; // FM-PAC SRAM requires a special key write sequence to open up SRAM access
 
@@ -225,8 +223,6 @@ ITCM_CODE void cpu_writemem16(u16 address, u8 value)
 void Z80_Interface_Reset(void)
 {
     CPU.CycleDeficit      = 0;
-    sram_write_enabled_a  = 0;
-    sram_write_enabled_b  = 0;
     FMPAC_SRAM_in_view    = 0;
     FMPAC_Key1            = 0;
 }

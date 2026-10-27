@@ -263,8 +263,6 @@ void msxSaveState(u8 gameNum)
         if (retVal) retVal = fwrite(&zoom_screen,           sizeof(zoom_screen),            1, handle);
         if (retVal) retVal = fwrite(&screenPanX,            sizeof(screenPanX),             1, handle);
         if (retVal) retVal = fwrite(OccBuf,                 sizeof(OccBuf),                 1, handle);
-        if (retVal) retVal = fwrite(&sram_write_enabled_a,  sizeof(sram_write_enabled_a),   1, handle);
-        if (retVal) retVal = fwrite(&sram_write_enabled_b,  sizeof(sram_write_enabled_b),   1, handle);
         if (retVal) retVal = fwrite(&FMPAC_SRAM_in_view,    sizeof(FMPAC_SRAM_in_view),     1, handle);        
         if (retVal) retVal = fwrite(&msx_music_capable_game,sizeof(msx_music_capable_game), 1, handle);
         if (retVal) retVal = fwrite(mirror_ram_bank,        sizeof(mirror_ram_bank),        1, handle);
@@ -511,8 +509,6 @@ void msxLoadState(u8 gameNum)
             if (retVal) retVal = fread(&zoom_screen,           sizeof(zoom_screen),            1, handle);
             if (retVal) retVal = fread(&screenPanX,            sizeof(screenPanX),             1, handle);
             if (retVal) retVal = fread(OccBuf,                 sizeof(OccBuf),                 1, handle);
-            if (retVal) retVal = fread(&sram_write_enabled_a,  sizeof(sram_write_enabled_a),   1, handle);
-            if (retVal) retVal = fread(&sram_write_enabled_b,  sizeof(sram_write_enabled_b),   1, handle);
             if (retVal) retVal = fread(&FMPAC_SRAM_in_view,    sizeof(FMPAC_SRAM_in_view),     1, handle);
             if (retVal) retVal = fread(&msx_music_capable_game,sizeof(msx_music_capable_game), 1, handle);
             if (retVal) retVal = fread(mirror_ram_bank,        sizeof(mirror_ram_bank),        1, handle);
