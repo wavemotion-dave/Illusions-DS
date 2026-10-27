@@ -2066,7 +2066,7 @@ void IllusionDSInitCPU(void)
     //  -----------------------------------------
     //  Init Main Memory and VDP Video Memory
     //  -----------------------------------------
-    memset(RAM_Memory, 0x00, 0x80000);
+    memset(RAM_Memory, 0x00, RAM_MEMORY_SIZE);
     memset(VDP_Memory, 0x00, sizeof(VDP_Memory));
 
     // -----------------------------------------------

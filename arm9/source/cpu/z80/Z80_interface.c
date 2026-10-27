@@ -124,6 +124,7 @@ void __attribute__((noinline)) HandleAscii16X(u8 media_id, u16 address, u8 value
 #define FMPAC_KEY2 0x69
 void __attribute__((noinline)) HandleFMPAC(u8 media_id, u16 address, u8 value)
 {
+    debug[1]++;
     if (address == 0x5FFE)
     {
         // Key register
@@ -131,12 +132,14 @@ void __attribute__((noinline)) HandleFMPAC(u8 media_id, u16 address, u8 value)
 
         if ((SRAM_Memory[0x1FFF] == 0x69) && (value == 0x4D))
         {
+            debug[2]++;
             FMPAC_SRAM_in_view = 1;
             MSXCartPtr[MEDIA_CART2][2] = (u8*)SRAM_Memory;
             MemoryMap[2] = MSXCartPtr[MEDIA_CART2][2] - 0x4000;
         }
         else
         {
+            debug[3]++;
             FMPAC_SRAM_in_view = 0;
             MSXCartPtr[MEDIA_CART2][2] = (u8*)TURBO_FMPAC;
             MemoryMap[2] = MSXCartPtr[MEDIA_CART2][2] - 0x4000;
@@ -150,12 +153,14 @@ void __attribute__((noinline)) HandleFMPAC(u8 media_id, u16 address, u8 value)
 
         if ((SRAM_Memory[0x1FFE] == 0x4D) && (value == 0x69))
         {
+            debug[4]++;
             FMPAC_SRAM_in_view = 1;
             MSXCartPtr[MEDIA_CART2][2] = (u8*)SRAM_Memory;
             MemoryMap[2] = MSXCartPtr[MEDIA_CART2][2] - 0x4000;
         }
         else
         {
+            debug[5]++;
             FMPAC_SRAM_in_view = 0;
             MSXCartPtr[MEDIA_CART2][2] = (u8*)TURBO_FMPAC;
             MemoryMap[2] = MSXCartPtr[MEDIA_CART2][2] - 0x4000;
@@ -166,6 +171,7 @@ void __attribute__((noinline)) HandleFMPAC(u8 media_id, u16 address, u8 value)
     // Otherwise see if we are able to write into the SRAM
     if (FMPAC_SRAM_in_view && (address >= 0x4000) && (address < 0x5FFE))
     {
+        debug[6]++;
         SRAM_Memory[address & 0x1FFF] = value;
         sram_show_status = 5;
     }
@@ -207,9 +213,16 @@ ITCM_CODE void cpu_writemem16(u16 address, u8 value)
         u8 media_id = bCartInPage[address>>14] - 1;     // Is this MEDIA_CART1 or MEDIA_CART2?
         
         // ----------------------------------------------------------
-        // Illusion City is ASCII16-X - that's all we support here.
+        // Illusion City is ASCII16-X - plus FM-PAC in slot 2
         // ----------------------------------------------------------
-        HandleAscii16X(media_id, address, value);
+        if (media_id == MEDIA_CART1)
+        {
+            HandleAscii16X(media_id, address, value);
+        }
+        else // CART2 is FM-PAC with SRAM
+        {
+            HandleFMPAC(media_id, address, value);
+        }
     }
     else
     {

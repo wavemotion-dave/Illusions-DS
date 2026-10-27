@@ -123,6 +123,7 @@ extern u8 mirror_ram_bank[4];
 #define FMPAC_SRAM      2  // For our special FM-PAC 'Cart'
 #define END_MAPPERS     3
 
+#define    RAM_MEMORY_SIZE      0x80000 // 512K of RAM
 #define    MAX_CART_SIZE_KB     4096    // 4MB so we can load Illusion City
 #define    MAX_DISK_SIZE_KB     720     // Disks are 360K or 720K
 

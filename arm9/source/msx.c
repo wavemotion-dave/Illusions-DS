@@ -773,7 +773,7 @@ ITCM_CODE void cpu_writeport_msx(register u8 Port,register unsigned char Value)
  ********************************************************************************/
 void msxWipeRAM(void)
 {
-    memset(RAM_Memory, 0x00, 0x80000);
+    memset(RAM_Memory, 0x00, RAM_MEMORY_SIZE);
 }
 
 // -------------------------------------------------------------------------
