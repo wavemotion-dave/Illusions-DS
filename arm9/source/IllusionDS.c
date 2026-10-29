@@ -2464,20 +2464,13 @@ void PatchZ80(register Z80 *r)
 /**************************************************************/
 u32 LoopZ80(void)
 {
-    // Execute 1 scanline worth of CPU instructions
-    extern u8 s1990_reg[];
-    u32 cycles_to_process = VDP9938_CLOCKS_PER_LINE + CPU.CycleDeficit;
-    
     // -------------------------------------------------------------------------------
     // And here is some fake Turbo-R magic... we are essentially giving the
     // core Z80 more cycles to work with to simulate a semi-Turbo-R experience.
     // This is NOT accurate emulation but fortunately Illusion City generally
     // doesn't use any Turbo-R specific CPU / R800 functionality so this kinda works!
     // -------------------------------------------------------------------------------
-    if (s1990_reg[6] & 0x40) // DRAM mode if bit is set (faster Z80)
-    {
-        cycles_to_process += VDP9938_CLOCKS_PER_LINE + 57; // 2.25x Z80 mode
-    }
+    u32 cycles_to_process = ((VDP9938_CLOCKS_PER_LINE * 2) + 57) + CPU.CycleDeficit;   
     
     CPU.CycleDeficit = ExecZ80(cycles_to_process);
     
