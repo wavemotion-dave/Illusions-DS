@@ -58,6 +58,8 @@ Press the MSX key in the lower right to access the icon menu system
 and you can save or restore directly to one of two save slots. These
 can be used anytime.
 
+Please note that flash-saves and disk saves are not supported at this time.
+
 
 Version History :
 -----------------------
