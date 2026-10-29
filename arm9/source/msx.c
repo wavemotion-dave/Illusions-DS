@@ -480,15 +480,12 @@ ITCM_CODE unsigned char cpu_readport_msx(register u8 Port)
 }
 
 
-//--------------------------------------------------------------------------------------------------
-// MSX2 Machine Configuration: Slot 3 is expanded. Slot 2 contains RAM. Slot 1 is main Cartridge.
-//--------------------------------------------------------------------------------------------------
-// Memory          Slot 0       Slot 1      Slot 2      Slot 3-0   Slot 3-1    Slot 3-2    Slot 3-3
-// C000h~FFFFh      ---         Cart1       Cart2       ---        ---         ---         16K RAM
-// 8000h~BFFFh      ---         Cart1       Cart2       ---        ---         ---         16K RAM
-// 4000h~7FFFh    Main-ROM      Cart1       Cart2       ---        Disk-ROM    MSX-Music   16K RAM
-// 0000h~3FFFh    Main-ROM      Cart1       Cart2       Ext-ROM    ---         ---         16K RAM
-//--------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
+// This Turbo-R emulation expands slot 0 and slot 3 similar to a Panasonic FS-A1GT but with only a
+// subset of the normal system ROMs. We basically use the main 32K BIOS System ROM, the 16K Extended
+// ROM and then we swap in our normal FMPAC (for MSX-MUSIC and SRAM) and an older disk driver that
+// is compatible with our WD2793 floppy controller emulation. It's just enough to make this run.
+//----------------------------------------------------------------------------------------------------
 void msx_slot_map_turboR(unsigned char Value)
 {
     special_memory_access &= ~SPEC_MEM_SUBSLOT_ACTIVE;  // Until proven otherwise below...

@@ -2476,14 +2476,7 @@ u32 LoopZ80(void)
     // -------------------------------------------------------------------------------
     if (s1990_reg[6] & 0x40) // DRAM mode if bit is set (faster Z80)
     {
-        if (s1990_reg[6] & 0x20) // R800 mode if bit is clear
-        {
-            cycles_to_process += VDP9938_CLOCKS_PER_LINE + 57; // 2.25x Z80 mode
-        }
-        else // R800 turbo mode... best we can do is 3x and remember we don't really have an R800 processor!
-        {
-            cycles_to_process += (VDP9938_CLOCKS_PER_LINE * 2); // 3x Z80 mode
-        }    
+        cycles_to_process += VDP9938_CLOCKS_PER_LINE + 57; // 2.25x Z80 mode
     }
     
     CPU.CycleDeficit = ExecZ80(cycles_to_process);

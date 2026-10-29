@@ -1,8 +1,10 @@
-# Illusions-DS - MSX2 Emulator for the MSX-Translation of Illusion City
+# Illusions-DS - MSX Illusion City Emulator
 
-Requires a DSi/XL/LL and will NOT run in DS-Lite or 'Compatibility' mode.
+This Emulator is specifically for the amazing MSX-Translation of Illusion City.
+Requires a DSi/XL/LL and will NOT run in DS-Lite or 'Compatibility' mode. The game
+will check to make sure you have the needed processing power and RAM to run the game.
 
-The only other file needed is the 4MB ASCII16-X ROM of Illusion City as produced by MSX Translations.
+Besides Illusions-DS.nds, the only other file needed is the 4MB ASCII16-X ROM of Illusion City as produced by MSX Translations.
 
 Place this file exactly named "Illusion City.rom" in the /roms folder on your SD card.
 
@@ -38,3 +40,25 @@ The Illusions-DS emulator is offered as-is, without any warranty.
 Special thanks to the MSX Translation team for their amazing work!
 
 ![MSX Cover](images/cover.png)
+
+Saving Progress :
+-----------------------
+Illusions-DS provides two ways to save your progress as you play. 
+The first is via FM-PAC which is a standard MSX cart that provides
+SRAM. This SRAM is preserved to your SD card so you can pick up 
+where you left off. When playing Illusion City, you can load a game 
+at any time but you can only save to SRAM when you are at a terminal
+(such as the one in your starting room when the game begins). 
+
+The other way to save is using one of the two built-in Save Slots.
+Press the MSX key in the lower right to access the icon menu system
+and you can save or restore directly to one of two save slots. These
+can be used anytime.
+
+
+Version History :
+-----------------------
+
+Version 1.0 - 29-Oct-2026 by wavemotion-dave
+* First major version released.
+

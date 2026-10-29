@@ -92,10 +92,10 @@ static const byte CyclesED[256] __attribute__((section(".dtcm"))) =
    0,  0,  0,  0,  0,  0,  0,   0,        0,  0,  0,  0, 0,  0,  0,  0,   // 0x90
   16, 16, 16, 16,  0,  0,  0,   0,       16, 16, 16, 16, 0,  0,  0,  0,   // 0xA0
   21, 21, 21, 21,  0,  0,  0,   0,       21, 21, 21, 21, 0,  0,  0,  0,   // 0xB0 - These cycles assume the block transfer continues... will compensate in the CodesED handler
-  0,   0,  0,  0,  0,  0,  0,   0,        0,  0,  0,  0, 0,  0,  0,  0,   // 0xC0
-  0,   0,  0,  0,  0,  0,  0,   0,        0,  0,  0,  0, 0,  0,  0,  0,   // 0xD0
+  0,  14,  0, 36,  0,  0,  0,   0,        0, 14,  0,  0, 0,  0,  0,  0,   // 0xC0
+  0,  14,  0,  0,  0,  0,  0,   0,        0, 14,  0,  0, 0,  0,  0,  0,   // 0xD0
   0,   0,  0,  0,  0,  0,  0,   0,        0,  0,  0,  0, 0,  0,  0,  0,   // 0xE0
-  0,   0,  0,  0,  0,  0,  0,   0,        0,  0,  0,  0, 0,  0,  0,  0    // 0xF0
+  0,   0,  0, 36,  0,  0,  0,   0,        0,  0,  0,  0, 0,  0,  0,  0    // 0xF0
 };
 
 // M1 wait states inserted ... will be compensated for if the machine in use doesn't use M1 waits

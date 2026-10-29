@@ -291,3 +291,27 @@ case CPDR:
     N_FLAG|(CPU.AF.B.l&C_FLAG)|ZSTable[J.B.l]|
     ((CPU.AF.B.h^I^J.B.l)&H_FLAG)|(CPU.BC.W? P_FLAG:0);
   break;
+
+/** R800 multiply instructions (MSX Turbo R) *****************/
+/** MULUB A,r : HL = A * r (r = B,C,D,E)                     **/
+/** MULUW HL,rr : DE:HL = HL * rr (rr = BC,SP)               **/
+#define M_MULUB(Reg)                                          \
+  CPU.HL.W=(word)CPU.AF.B.h*(Reg);                            \
+  CPU.AF.B.l=(CPU.AF.B.l&(S_FLAG|P_FLAG))|                    \
+             (CPU.HL.W? 0:Z_FLAG)|                            \
+             (CPU.HL.B.h? C_FLAG:0)
+
+#define M_MULUW(Reg)                                          \
+  { unsigned int R=(unsigned int)CPU.HL.W*(Reg);              \
+    CPU.DE.W=(word)(R>>16);                                   \
+    CPU.HL.W=(word)(R&0xFFFF);                                \
+    CPU.AF.B.l=(CPU.AF.B.l&(S_FLAG|P_FLAG))|                  \
+               (R? 0:Z_FLAG)|                                 \
+               (R>0xFFFF? C_FLAG:0); }
+
+case 0xC1:     M_MULUB(CPU.BC.B.h);break;   /* MULUB A,B  */
+case 0xC9:     M_MULUB(CPU.BC.B.l);break;   /* MULUB A,C  */
+case 0xD1:     M_MULUB(CPU.DE.B.h);break;   /* MULUB A,D  */
+case 0xD9:     M_MULUB(CPU.DE.B.l);break;   /* MULUB A,E  */
+case 0xC3:     M_MULUW(CPU.BC.W);break;     /* MULUW HL,BC */
+case 0xF3:     M_MULUW(CPU.SP.W);break;     /* MULUW HL,SP */
