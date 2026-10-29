@@ -8,8 +8,11 @@ Besides Illusions-DS.nds, the only other file needed is the 4MB ASCII16-X ROM of
 
 Place this file exactly named "Illusion City.rom" in the /roms folder on your SD card.
 
+If you launch the emulator and get no warning screens, you will be greated with the main menu as such:
+
 ![Main Menu](images/menu.png)
 
+Assuming you have nothing to configure, just press the PLAY icon.
 
 # Donations Welcome (but never required!)
 
