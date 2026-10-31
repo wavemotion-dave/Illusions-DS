@@ -15,7 +15,7 @@ include $(DEVKITARM)/ds_rules
 
 export TARGET		:=	Illusions-DS
 export TOPDIR		:=	$(CURDIR)
-export VERSION		:=  1.0
+export VERSION		:=  1.0a
 
 ICON 		:= -b $(CURDIR)/logo.bmp "Illusions-DS $(VERSION);wavemotion-dave;https://github.com/wavemotion-dave/Illusions-DS" 
 

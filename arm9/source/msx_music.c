@@ -214,14 +214,14 @@ static inline void YM_PrecomputeFMRates(YM *chip, int ch);
 
 static u32 YM_ComputePhaseIncrement(u16 fNumber, u8 block, u8 mulNibble)
 {
-    // Integer-only: inc = F * 2^block * mulX2 * (masterClock << 12) / (36 * sampleRate)
+    // Integer-only: inc = F * 2^block * mulX2 * (masterClock << 12) / (72 * sampleRate)
     // See the development notes for the derivation. This rearrangement avoids
     // floating point entirely; both operands are integers.
     unsigned long long num = (unsigned long long)fNumber * (unsigned long long)YM_MulTableX2[mulNibble & 0x0F];
     num <<= block;
     num *= (unsigned long long)YM_MASTER_CLOCK << 12;
 
-    unsigned long long inc = num / (36ULL * YM_SAMPLE_RATE);
+    unsigned long long inc = num / (72ULL * YM_SAMPLE_RATE);
     if (inc >= 0x40000000ULL)
     {
         return 0; // would alias: freeze the operator
