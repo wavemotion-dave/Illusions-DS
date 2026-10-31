@@ -131,10 +131,12 @@ extern u8 *ROM_Memory;
 extern u8 *DISK_Memory;
 extern u8 *RAM_Memory;
 extern u8 TURBO_BIOS[32*1024];
+extern u8 TURBO_OPENING[16*1024];
 extern u8 TURBO_EXT[16*1024];
 extern u8 TURBO_FMPAC[16*1024];
 extern u8 TURBO_DISK[16*1024];
 extern u8 SRAM_Memory[0x2000];
+extern u8 Unmapped_Memory[0x2000];
 
 extern u8 bCartInPage[4];
 extern u8 bRAMInPage[4];

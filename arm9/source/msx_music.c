@@ -221,7 +221,7 @@ static u32 YM_ComputePhaseIncrement(u16 fNumber, u8 block, u8 mulNibble)
     num <<= block;
     num *= (unsigned long long)YM_MASTER_CLOCK << 12;
 
-    unsigned long long inc = num / (72ULL * YM_SAMPLE_RATE);
+    unsigned long long inc = num / (36ULL * YM_SAMPLE_RATE); // An octave higher as it sounds better...
     if (inc >= 0x40000000ULL)
     {
         return 0; // would alias: freeze the operator

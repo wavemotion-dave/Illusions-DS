@@ -25,7 +25,7 @@
 #include "lzav.h"
 #include "printf.h"
 
-#define MSX_SAVE_VER   0x0002  // Change this if the basic format of the .SAV file changes. Invalidates older .sav files.
+#define MSX_SAVE_VER   0x0003  // Change this if the basic format of the .SAV file changes. Invalidates older .sav files.
 
 // -----------------------------------------------------------------------------------------------------
 // Since the main MemoryMap[] can point to differt things (RAM, ROM, BIOS, etc) and since we can't rely
@@ -47,6 +47,7 @@ struct RomOffset Offsets[8];
 #define TYPE_EBIOS      4
 #define TYPE_FMPAC      5
 #define TYPE_SRAM       6
+#define TYPE_UNMAPPED   7
 #define TYPE_OTHER      9
 
 static char szLoadFile[256];        // We build the filename out of the base filename and tack on .sav, .ee, etc.
@@ -98,7 +99,7 @@ void msxSaveState(u8 gameNum)
         {
             u8 *shifted_offset = MemoryMap[i] + (0x2000 * i);   // Shift the MemoryMap[] back up to non-offset range for the save/restore
 
-            if ((shifted_offset >= ROM_Memory) && (shifted_offset < ROM_Memory+MAX_CART_SIZE_KB))
+            if ((shifted_offset >= ROM_Memory) && (shifted_offset < ROM_Memory+(MAX_CART_SIZE_KB*1024)))
             {
                 Offsets[i].type = TYPE_ROM;
                 Offsets[i].offset = shifted_offset - ROM_Memory;
@@ -133,6 +134,11 @@ void msxSaveState(u8 gameNum)
                 Offsets[i].type = TYPE_FMPAC;
                 Offsets[i].offset = shifted_offset - TURBO_FMPAC;
             }
+            else if ((shifted_offset >= Unmapped_Memory) && (shifted_offset < Unmapped_Memory+(sizeof(Unmapped_Memory))))
+            {
+                Offsets[i].type = TYPE_UNMAPPED;
+                Offsets[i].offset = shifted_offset - Unmapped_Memory;
+            }
             else
             {
                 Offsets[i].type = TYPE_OTHER;
@@ -153,6 +159,11 @@ void msxSaveState(u8 gameNum)
             {
                 Offsets[i].type = TYPE_SRAM;
                 Offsets[i].offset = MSXCartPtr[MEDIA_CART1][i] - SRAM_Memory;
+            }
+            else if ((MSXCartPtr[MEDIA_CART1][i] >= Unmapped_Memory) && (MSXCartPtr[MEDIA_CART1][i] < Unmapped_Memory+(sizeof(Unmapped_Memory))))
+            {
+                Offsets[i].type = TYPE_UNMAPPED;
+                Offsets[i].offset = MSXCartPtr[MEDIA_CART1][i] - Unmapped_Memory;
             }
             else
             {
@@ -175,6 +186,16 @@ void msxSaveState(u8 gameNum)
             {
                 Offsets[i].type = TYPE_SRAM;
                 Offsets[i].offset = MSXCartPtr[MEDIA_CART2][i] - SRAM_Memory;
+            }
+            else if ((MSXCartPtr[MEDIA_CART2][i] >= TURBO_FMPAC) && (MSXCartPtr[MEDIA_CART2][i] < TURBO_FMPAC+(sizeof(TURBO_FMPAC))))
+            {
+                Offsets[i].type = TYPE_FMPAC;
+                Offsets[i].offset = MSXCartPtr[MEDIA_CART2][i] - TURBO_FMPAC;
+            }
+            else if ((MSXCartPtr[MEDIA_CART2][i] >= Unmapped_Memory) && (MSXCartPtr[MEDIA_CART2][i] < Unmapped_Memory+(sizeof(Unmapped_Memory))))
+            {
+                Offsets[i].type = TYPE_UNMAPPED;
+                Offsets[i].offset = MSXCartPtr[MEDIA_CART2][i] - Unmapped_Memory;
             }
             else
             {
@@ -393,6 +414,10 @@ void msxLoadState(u8 gameNum)
                 {
                     MemoryMap[i] = (u8 *) (TURBO_FMPAC + Offsets[i].offset) - (0x2000 * i);
                 }
+                else if (Offsets[i].type == TYPE_UNMAPPED)
+                {
+                    MemoryMap[i] = (u8 *) (Unmapped_Memory + Offsets[i].offset) - (0x2000 * i);
+                }
                 else // TYPE_OTHER - this is just a pointer to memory
                 {
                     MemoryMap[i] = (u8 *) (Offsets[i].offset) - (0x2000 * i);
@@ -410,6 +435,10 @@ void msxLoadState(u8 gameNum)
                 {
                     MSXCartPtr[MEDIA_CART1][i] = (u8 *) (SRAM_Memory + Offsets[i].offset);
                 }
+                else if (Offsets[i].type == TYPE_UNMAPPED)
+                {
+                    MSXCartPtr[MEDIA_CART1][i] = (u8 *) (Unmapped_Memory + Offsets[i].offset);
+                }
                 else // TYPE_OTHER - this is just a pointer to memory
                 {
                     MSXCartPtr[MEDIA_CART1][i] = (u8 *) (Offsets[i].offset);
@@ -426,6 +455,14 @@ void msxLoadState(u8 gameNum)
                 else if (Offsets[i].type == TYPE_SRAM)
                 {
                     MSXCartPtr[MEDIA_CART2][i] = (u8 *) (SRAM_Memory + Offsets[i].offset);
+                }
+                else if (Offsets[i].type == TYPE_FMPAC)
+                {
+                    MSXCartPtr[MEDIA_CART2][i] = (u8 *) (TURBO_FMPAC + Offsets[i].offset);
+                }
+                else if (Offsets[i].type == TYPE_UNMAPPED)
+                {
+                    MSXCartPtr[MEDIA_CART2][i] = (u8 *) (Unmapped_Memory + Offsets[i].offset);
                 }
                 else // TYPE_OTHER - this is just a pointer to memory
                 {

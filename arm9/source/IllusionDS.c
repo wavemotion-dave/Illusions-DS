@@ -255,26 +255,24 @@ mm_word ClickRemoval(mm_word len, mm_addr dest)
         YMMixer(16, mix1, &myYM);       // Mix directly on top of AY
     }
     
-    int target = mix1[15]; // This is what we are smoothing towards
+    int target = mix1[15];          // This is what we are smoothing towards
 
     s16 *p = (s16 *)dest;
+    int step = abs(target - last_sample) / len;
     for (int i = 0; i < len; i++)
     {
-        if (last_sample < (target - 16))
+        if (last_sample < (target - step))
         {
-            last_sample += 8;
+            last_sample += step;
         }
-        if (last_sample > (target + 16))
+        if (last_sample > (target + step))
         {
-            last_sample -= 8;
+            last_sample -= step;
         }
         *p++ = last_sample;
     }
 
-    if (--bClickRemoveNeeded == 0)
-    {
-        // Nothing to do...
-    }
+    bClickRemoveNeeded--;
 
     return len;
 }
@@ -2470,7 +2468,7 @@ u32 LoopZ80(void)
     // This is NOT accurate emulation but fortunately Illusion City generally
     // doesn't use any Turbo-R specific CPU / R800 functionality so this kinda works!
     // -------------------------------------------------------------------------------
-    u32 cycles_to_process = ((VDP9938_CLOCKS_PER_LINE * 2) + 57) + CPU.CycleDeficit;   
+    u32 cycles_to_process = ((VDP9938_CLOCKS_PER_LINE * 2) ) + CPU.CycleDeficit;   
     
     CPU.CycleDeficit = ExecZ80(cycles_to_process);
     
