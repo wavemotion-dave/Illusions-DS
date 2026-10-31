@@ -43,9 +43,10 @@ AY38910 myAY                __attribute__((section(".dtcm")));          // Decla
 YM      myYM                __attribute__((section(".dtcm")));          // Declare new YM module (MSX-MUSIC) for MSX games that use it
 
 // Some Turbo-R Specific handlers... very bare bones!
-u8 last_f4 = 0x00;
 u8 s1990_reg_idx=0;
 u8 s1990_reg[16] = {0};
+
+u8 cold_or_warm_boot    = 0x00;      // After boot, this will be 0x80 so system can warm-boot
 
 // --------------------------------------------------------------------------
 // These aren't used very often so we don't need them in fast .dtcm memory
@@ -436,7 +437,8 @@ ITCM_CODE unsigned char cpu_readport_msx(register u8 Port)
   }      
   else if (Port == 0xF4) // Turbo R Reset Status
   {
-    return last_f4;  // Pause switch released
+    return cold_or_warm_boot;
+    cold_or_warm_boot = 0x80;
   }      
   else if (Port >= 0xFC) // Mirror of RAM select. Not all MSX2 machine return this but we do.
   {
@@ -555,12 +557,19 @@ void msx_slot_map_turboR(unsigned char Value)
                 MemoryMap[2] = TURBO_BIOS;
                 MemoryMap[3] = TURBO_BIOS;
             }
+            else if (((msx_subslot0 & 0x0C) >> 2) == 3) // Subslot 3 has Opening ROM
+            {
+                bCartInPage[1] = 0;
+                bRAMInPage[1] = 0;
+                MemoryMap[2] = TURBO_OPENING + 0x0000 - 0x4000;
+                MemoryMap[3] = TURBO_OPENING + 0x2000 - 0x6000;
+            }
             else
             {
                 bCartInPage[1] = 0;
                 bRAMInPage[1] = 0;
-                MemoryMap[2] = Unmapped_Memory - 0x0000;
-                MemoryMap[3] = Unmapped_Memory - 0x2000;
+                MemoryMap[2] = Unmapped_Memory - 0x4000;
+                MemoryMap[3] = Unmapped_Memory - 0x6000;
             }            
             break;
         case 0x01:  // Slot 1:  Maps to Game Cart
@@ -695,7 +704,6 @@ ITCM_CODE void cpu_writeport_msx(register u8 Port,register unsigned char Value)
     else if (Port == 0xA1) {ay38910DataW(Value, &myAY);}        // PSG Area
     else if (Port == 0xB4) {write_port_RTC_index(Value);}       // RTC Area (index register)
     else if (Port == 0xB5) {write_port_RTC_data(Value);}        // RTC Area (data register)
-    else if (Port == 0xF4) {last_f4 = Value;}
     else if (Port == 0xE4) // S1990 register index
     {
         s1990_reg_idx = Value & 0xF;
@@ -892,7 +900,7 @@ void msx_restore_bios(void)
 // ---------------------------------------------------------
 void msx_reset(void)
 {
-    last_f4 = 0x00;
+    cold_or_warm_boot = 0x00;
 
     MSX_InitialMemoryLayout();
 }

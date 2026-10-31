@@ -639,6 +639,8 @@ ITCM_CODE void ColorSprites(uint8_t Y, u8 *ZBuf)
 
   u8 zeroNotTransparent = (VDP[8]&0x20); // Zero index is a real color.. we can use BG_PALETTE[16]
 
+  const u8 g5 = (ScrMode == 6);   // Screen 6: color code = even/odd dot pair
+  
   /* Draw all marked sprites */
   for(;M;M>>=1,AT-=4)
     if(M&1)
@@ -664,6 +666,7 @@ ITCM_CODE void ColorSprites(uint8_t Y, u8 *ZBuf)
         P=ZBuf+spriteX+(C&0x80? 0:32);
         O=OccBuf+spriteX+(C&0x80? 0:32);
         C&=0x0F;
+        if (g5) C = (C >> 2) & 3; // Screen 6 decimation
         J=PT[0];
 
         if(OrThem&0x20)
@@ -1708,6 +1711,86 @@ ITCM_CODE void RefreshLine5(u8 uY)
     }
 }
 
+static u8 ScrollRow[128] ALIGN(4) __attribute__((section(".dtcm")));   // Screen 5: rotated source row
+
+/** RefreshLine6() ******************************************/
+/** Refresh VDP9938 Screen 6: 512x192, 4 colors bitmap     **/
+/************************************************************/
+const u8 *HandlePageScrollScreen6(const u8 *src)
+{
+    u32 tmp[32];                        // 128 bytes on the (DTCM) stack, word-aligned
+    int scroll;
+    const u8 *a, *b;
+
+    if (VDP[25] & 1)
+    {
+        int page = (VDP[26] & 0x20) != 0;
+
+        scroll = ((VDP[26] & 0x1F) << 4) - ((VDP[27] & 7) << 1);
+        if (scroll < 0)
+        {
+            scroll += 512;
+            page ^= 1;
+        }
+
+        u32 rowOffset = (u32)(src - VDP_Memory) & ~0x8000;
+        if (page)
+            rowOffset ^= 0x8000;
+
+        a = VDP_Memory + rowOffset;
+        b = VDP_Memory + (rowOffset ^ 0x8000);
+    }
+    else
+    {
+        scroll = (((VDP[26] & 0x1F) << 4) - ((VDP[27] & 7) << 1)) & 511;
+        a = b = src;
+    }
+
+    const int start = scroll >> 2;      // 0..127, first byte in page 'a'
+    const int n1    = 128 - start;      // bytes available from 'a'
+    u8 *dst = (u8 *)tmp;
+
+    if (!(scroll & 2))
+    {
+        // Both pixels come from the same byte: bits 7:6 and 3:2.
+        const u8 *p = a + start;
+        for (int i = 0; i < n1; i++)
+            *dst++ = *p++ & 0xCC;
+
+        p = b;
+        for (int i = n1; i < 128; i++)
+            *dst++ = *p++ & 0xCC;
+    }
+    else
+    {
+        // pixel0 = bits 3:2 of byte j, pixel1 = bits 7:6 of byte j+1.
+        const u8 *p = a + start;
+        u32 c0 = *p++;
+        for (int i = 0; i < n1 - 1; i++)
+        {
+            u32 c1 = *p++;
+            *dst++ = (u8)(((c0 << 4) & 0xC0) | ((c1 >> 4) & 0x0C));
+            c0 = c1;
+        }
+
+        // Boundary: last byte of 'a', then 'b'.
+        p = b;
+        for (int i = n1 - 1; i < 128; i++)
+        {
+            u32 c1 = *p++;
+            *dst++ = (u8)(((c0 << 4) & 0xC0) | ((c1 >> 4) & 0x0C));
+            c0 = c1;
+        }
+    }
+
+    // 32-bit copy out (ScrollRow must be 4-byte aligned).
+    u32 *d = (u32 *)ScrollRow;
+    for (int i = 0; i < 32; i++)
+        d[i] = tmp[i];
+
+    return ScrollRow;
+}
+
 /** RefreshLine6() ******************************************/
 /** Refresh VDP9938 Screen 6: 512x192, 4 colors bitmap     **/
 /************************************************************/
@@ -1724,15 +1807,18 @@ ITCM_CODE void RefreshLine6(u8 uY)
         uint8_t *P = RefreshBorder(uY);
 
         u32 * restrict dst32 = (u32*)P;
-        u32 addr = ((u32)((uY + VScroll) & 1023) << 7);
-        const u8 * restrict src = &ChrTab[addr & 0x7FFF];
 
-        // --------------------------------------------------------------------
-        // For Screen 6, we are only rendering the even (A) pixels.
-        // This decimation is okay as almost nothing uses Screen 6 except
-        // the main MSX logo screen which looks fine drawing every other pixel.
-        // We might alpha-blend someday... but that day is not today.
-        // --------------------------------------------------------------------
+        const u8 *src = ChrTab +
+            (((u32)(uY + VScroll) << 7) & ChrTabM & 0x7FFF);
+
+        // -------------------------------------------------------------
+        // V9958 horizontal scrolling.
+        // -------------------------------------------------------------
+        src = HandlePageScrollScreen6(src);
+
+        // -------------------------------------------------------------
+        // Original Screen 6 conversion, unchanged.
+        // -------------------------------------------------------------
         for (int i = 0; i < 128; i += 2)
         {
             u32 b0 = src[i];
@@ -1749,7 +1835,6 @@ ITCM_CODE void RefreshLine6(u8 uY)
         CommitLine(uY);
     }
 }
-
 
 /*
  * Screen 7 zoom-mode sprite renderer.

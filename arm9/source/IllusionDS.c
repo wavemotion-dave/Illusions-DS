@@ -2470,7 +2470,7 @@ u32 LoopZ80(void)
     // This is NOT accurate emulation but fortunately Illusion City generally
     // doesn't use any Turbo-R specific CPU / R800 functionality so this kinda works!
     // -------------------------------------------------------------------------------
-    u32 cycles_to_process = ((VDP9938_CLOCKS_PER_LINE * 2) + 57) + CPU.CycleDeficit;   
+    u32 cycles_to_process = ((VDP9938_CLOCKS_PER_LINE * 2) ) + CPU.CycleDeficit;   
     
     CPU.CycleDeficit = ExecZ80(cycles_to_process);
     
