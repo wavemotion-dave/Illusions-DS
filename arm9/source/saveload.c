@@ -25,7 +25,7 @@
 #include "lzav.h"
 #include "printf.h"
 
-#define MSX_SAVE_VER   0x0003  // Change this if the basic format of the .SAV file changes. Invalidates older .sav files.
+#define MSX_SAVE_VER   0x0004  // Change this if the basic format of the .SAV file changes. Invalidates older .sav files.
 
 // -----------------------------------------------------------------------------------------------------
 // Since the main MemoryMap[] can point to differt things (RAM, ROM, BIOS, etc) and since we can't rely
@@ -256,7 +256,7 @@ void msxSaveState(u8 gameNum)
         if (retVal) retVal = fwrite(&pSvg, sizeof(pSvg),1, handle);
 
         // Write sound chip data
-        if (retVal) retVal = fwrite(&myAY,                  sizeof(myAY),                   1, handle);
+        if (retVal) retVal = fwrite(&myAY,                  sizeof(myAY)-16,                1, handle);
         if (retVal) retVal = fwrite(&myYM,                  sizeof(myYM),                   1, handle);
 
         // Write disk controller data
@@ -518,7 +518,7 @@ void msxLoadState(u8 gameNum)
             SprTab = VDP_Memory + pSvg;
 
             // Write sound chip data
-            if (retVal) retVal = fread(&myAY,                  sizeof(myAY),                   1, handle);
+            if (retVal) retVal = fread(&myAY,                  sizeof(myAY)-16,                1, handle);
             if (retVal) retVal = fread(&myYM,                  sizeof(myYM),                   1, handle);
 
             // Write disk controller data

@@ -64,9 +64,13 @@ Please note that flash-saves and disk saves are not supported at this time.
 Version History :
 -----------------------
 
-Version 1.0a - 31-Oct-2026 by wavemotion-dave
-* MSX Turbo R logo screen now displays.
-* Very slight adjustment to timing for improved accuracy.
+Version 1.0a - 01-Nov-2026 by wavemotion-dave
+
+* MSX TurboR Logo screen displayed (cosmetic change only).
+* There was also a minor timing adjustment to make the game more accurate but it should be hardly noticeable.
+* Audible pop/click removed as game starts to play.
+* Save state improvement to better handle future changes.
+
 
 Version 1.0 - 29-Oct-2026 by wavemotion-dave
 * First major version released.

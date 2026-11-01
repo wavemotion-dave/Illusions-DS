@@ -53,9 +53,7 @@ ITCM_CODE u8 cpu_readmem16(u16 address)
 
 
 // -------------------------------------------------------------------------
-// The ASCII 16K Mapper:
-// 4000h~7FFFh  via writes to 6000h to 67FFh
-// 8000h~BFFFh  via writes to 7000h to 77FFh
+// The ASCII 16K Mapper on steroids... has mirrors and can allow 4MB+ ROMs.
 // -------------------------------------------------------------------------
 void __attribute__((noinline)) HandleAscii16X(u8 media_id, u16 address, u8 value)
 {
