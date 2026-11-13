@@ -72,7 +72,7 @@ struct __attribute__((__packed__)) Config_t
     u8  yOffset;
     u8  frameSkip;
     u8  ymScale;
-    u8  reserved1;
+    u8  yjkTrueColor;
     u8  reserved2;
     u8  reserved3;
     u8  reserved4;
@@ -83,11 +83,14 @@ struct __attribute__((__packed__)) Config_t
 #define FS_NONE                     0       // No Frame Skip
 #define FS_LIGHT                    1       // Light Frame Skip
 #define FS_AGGRESSIVE               2       // Aggressive Frame Skip
+#define FS_HEAVY                    FS_AGGRESSIVE
 
 #define YM_BAL_LOW                  0       // Low YM volume mix
 #define YM_BAL_MED                  1       // Medium YM volume mix
 #define YM_BAL_HIGH                 2       // High YM volume mix
 #define YM_BAL_MAX                  3       // Max (normal) YM volume mix
+
+#define VDP_9958                    4
 
 extern struct Config_t       myConfig;
 extern struct GlobalConfig_t myGlobalConfig;
@@ -138,6 +141,10 @@ extern u8 TURBO_DISK[16*1024];
 extern u8 SRAM_Memory[0x2000];
 extern u8 Unmapped_Memory[0x2000];
 
+#define ASCII16X_CFI_SIZE                 0x90
+#define ASCII16X_CFI_BYTE(offset)         ((offset) * 2)
+#define ASCII16X_COMMAND_ADDRESS(address) ((address) & 0x0FFE)
+
 extern u8 bCartInPage[4];
 extern u8 bRAMInPage[4];
 extern u8 *MSXCartPtr[2][8];
@@ -166,6 +173,9 @@ extern u8 msx_irq_pending;
 extern u8 palette_latch;
 extern uint8_t OccBuf[320];
 extern u8 zoom_screen;
+extern u8 ascii16xFlashCmdState[3];
+extern u8 ascii16xFlashReadMode[3];
+extern u8 ascii16xCfiBackup[3][ASCII16X_CFI_SIZE];
 
 // --------------------------------------------------
 // Some CPU and VDP and SGM stuff that we need
@@ -207,5 +217,9 @@ extern void EnsureSaveDirectory(void);
 extern void intro_logo(void);
 extern void UpperScreenMainMenu(void);
 extern void stop_intro_music(void);
+extern void setup_emulation_RGB15(void);
+extern void setup_emulation_BP8(void);
+extern void MsxSaveFlash(void);
+extern void MsxRestoreFlash(void);
 
 #endif

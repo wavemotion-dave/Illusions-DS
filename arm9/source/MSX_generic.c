@@ -306,7 +306,7 @@ void SetDefaultGameConfig(void)
     myConfig.yOffset = 2;                       // Small offset to help compressed Illusion City screens look their best
     myConfig.frameSkip = 1;                     // Light frameskip is needed for Illusion City
     myConfig.ymScale = YM_BAL_MAX;              // Normal YM is scaled to be the loudest
-    myConfig.reserved1 = 0;
+    myConfig.yjkTrueColor = 1;
     myConfig.reserved2 = 0;
     myConfig.reserved3 = 0;
     myConfig.reserved4 = 0;
@@ -359,7 +359,7 @@ const struct options_t Option_Table[2][20] =
         {"FRAMESKIP",       {"DISABLED", "ENABLED"},                            &myConfig.frameSkip,         2},
         {"YM BALANCE",      {"LOW", "MEDIUM", "HIGH", "MAX"},                   &myConfig.ymScale,           4},
         {"FPS",             {"OFF", "ON", "ON FULLSPEED"},                      &myGlobalConfig.showFPS,     3},
-        {"DEBUGGER",        {"OFF", "FULL DEBUG"},                              &myGlobalConfig.debugger,    2},
+//      {"DEBUGGER",        {"OFF", "FULL DEBUG"},                              &myGlobalConfig.debugger,    2},
         {NULL,              {"", ""},                                           NULL,                        1},
     }
 };

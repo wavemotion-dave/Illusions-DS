@@ -191,6 +191,11 @@ typedef struct
 
 extern Media_t MyMedia[3]; // Cart1, Cart2 and Disk possibilities
 
+#define FLASH_DIRTY_BLOCK_SIZE  0x2000
+#define FLASH_DIRTY_BLOCK_COUNT ((8 * 1024 * 1024) / FLASH_DIRTY_BLOCK_SIZE)
+
+extern u8 flashDirtyBlocks[FLASH_DIRTY_BLOCK_COUNT];
+
 extern u16 nds_key;
 extern u8  kbd_key;
 extern u8 kbd_keys_pressed;
