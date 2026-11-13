@@ -58,7 +58,7 @@ bool screenshotbmp(const char* filename) {
     // game - and screenshot of such a game would break. In the future we should probably just
     // move out the 128K to VRAM and then move it back. Good enough for now...
     // ----------------------------------------------------------------------------------------------
-    u8 *temp = (u8*)ROM_Memory+(MAX_CART_SIZE_KB*1024) - (128*1024);
+    u8 *temp = malloc(128*1024);
 
     HEADER *header= (HEADER*)temp;
     INFOHEADER *infoheader = (INFOHEADER*)(temp + sizeof(HEADER));
@@ -96,6 +96,8 @@ bool screenshotbmp(const char* filename) {
     DC_FlushAll();
     fwrite(temp, 1, 256 * 192 * 2 + sizeof(INFOHEADER) + sizeof(HEADER), file);
     fclose(file);
+    
+    free(temp);
     return true;
 }
 

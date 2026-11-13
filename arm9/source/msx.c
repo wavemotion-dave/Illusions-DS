@@ -438,7 +438,7 @@ ITCM_CODE unsigned char cpu_readport_msx(register u8 Port)
   else if (Port == 0xF4) // Turbo R Reset Status
   {
     return cold_or_warm_boot;
-    cold_or_warm_boot = 0x80;
+    //cold_or_warm_boot = 0x80;
   }      
   else if (Port >= 0xFC) // Mirror of RAM select. Not all MSX2 machine return this but we do.
   {
