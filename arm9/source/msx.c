@@ -873,7 +873,8 @@ void MSX_InitialMemoryLayout(void)
     MSXCartPtr[MEDIA_CART2][6] = (u8*)Unmapped_Memory;           // Segment Unmapped
     MSXCartPtr[MEDIA_CART2][7] = (u8*)Unmapped_Memory;           // Segment Unmapped
 
-    msxLoadSRAM();  // FM-PAC with MSX-MUSIC also has 8K of SRAM
+    msxLoadSRAM();      // FM-PAC with MSX-MUSIC also has 8K of SRAM
+    MsxRestoreFlash();  // And the ASC16X cart has writable flash
 }
 
 // ---------------------------------------------------------------
@@ -957,6 +958,92 @@ void msxLoadSRAM(void)
     if (ReadFileCarefully(szName, SRAM_Memory, sizeof(SRAM_Memory), 0, NULL) == 0)
     {
         memset(SRAM_Memory, 0xFF, sizeof(SRAM_Memory)); // Not found, so init the SRAM area
+    }
+}
+
+
+// ---------------------------------------------------------------------------------
+// Some of the newer Flash mappers are malleable - meaning that the flash sectors
+// can be erased and reprogrammed while the game is running. The .rom file is
+// somewhat more akin to a disk file in that it can be updated on-the-fly. If we
+// have detected any sector erase and byte programming, we will start a 3 second
+// countdown timer that will call into this routine to save the .rom file back out.
+// ---------------------------------------------------------------------------------
+static char szSaveFlashFile[MAX_FILE_NAME_LEN];
+
+// -----------------------------------------------------------------------
+// The flash save file is the same as the original ROM filename but we
+// use .SST in place of .ROM and we also ensure the sav directory exists.
+// -----------------------------------------------------------------------
+static void MsxMakeFlashFilename(void)
+{
+    DIR* dir = opendir("sav");
+    if (dir) closedir(dir);    // Directory exists... close it out and move on.
+    else mkdir("sav", 0777);   // Otherwise create the directory...
+    sprintf(szSaveFlashFile,"sav/%s", GetMasterFilename());
+
+    int len = strlen(szSaveFlashFile);
+    szSaveFlashFile[len-3] = 's';
+    szSaveFlashFile[len-2] = 's';
+    szSaveFlashFile[len-1] = 't';
+}
+
+// ---------------------------------------------------------------------------
+// We save off only the modified 8K flash blocks and keep it separate from
+// the original .rom file since we don't want to modify or change change the
+// original CRC which has implications for config settings, etc. Plus it just
+// feels cleaner to leave the original ROM as-is with no risk of damaging it.
+// ---------------------------------------------------------------------------
+void MsxSaveFlash(void)
+{
+    MsxMakeFlashFilename();
+    FILE *handle = fopen(szSaveFlashFile, "wb");
+    if (handle != NULL)
+    {
+        // -----------------------------------------------------------------------------
+        // Write the 1024 byte writemap... this tells us what flash blocks were written.
+        // -----------------------------------------------------------------------------
+        fwrite(flashDirtyBlocks, sizeof(flashDirtyBlocks), 1, handle);
+
+        // --------------------------------------------------------------------
+        // And now write out all of the 8K blocks that were erased/written.
+        // Generally not more than 1 or 2 blocks but we allow for any and all.
+        // --------------------------------------------------------------------
+        for (int i=0; i<1024; i++)
+        {
+            if (flashDirtyBlocks[i]) // Has block been modified?
+            {
+                fwrite(ROM_Memory + (0x2000 * i), 0x2000, 1, handle); // Write it...
+            }
+        }
+        fclose(handle);
+    }
+}
+
+// ---------------------------------------------------------------------------------------
+// Restore the 8K blocks from the .sst file and place them back into the ROM_memory[].
+// Think of the .sst file as the variable portion of the ROM that is written to save
+// things like high scores or configuration for the game and is overlaid on the real ROM.
+// ---------------------------------------------------------------------------------------
+void MsxRestoreFlash(void)
+{
+    memset(flashDirtyBlocks, 0x00, sizeof(flashDirtyBlocks));
+
+    MsxMakeFlashFilename();
+
+    ReadFileCarefully(szSaveFlashFile, flashDirtyBlocks, sizeof(flashDirtyBlocks), 0, 0);
+
+    // --------------------------------------------------------------------
+    // Read back any modified blocks and put them into the proper place.
+    // --------------------------------------------------------------------
+    int offset = sizeof(flashDirtyBlocks);
+    for (int i=0; i<1024; i++)
+    {
+        if (flashDirtyBlocks[i]) // Has 8K block been modified?
+        {
+            ReadFileCarefully(szSaveFlashFile, ROM_Memory + (0x2000 * i), 0x2000, offset, 0);
+            offset += 0x2000;
+        }
     }
 }
 

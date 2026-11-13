@@ -25,7 +25,7 @@
 #include "lzav.h"
 #include "printf.h"
 
-#define MSX_SAVE_VER   0x0004  // Change this if the basic format of the .SAV file changes. Invalidates older .sav files.
+#define MSX_SAVE_VER   0x0005  // Change this if the basic format of the .SAV file changes. Invalidates older .sav files.
 
 // -----------------------------------------------------------------------------------------------------
 // Since the main MemoryMap[] can point to differt things (RAM, ROM, BIOS, etc) and since we can't rely
@@ -290,6 +290,15 @@ void msxSaveState(u8 gameNum)
         if (retVal) retVal = fwrite(&msx_caps_lock,         sizeof(msx_caps_lock),          1, handle);
         if (retVal) retVal = fwrite(&msx_kana_lock,         sizeof(msx_kana_lock),          1, handle);
         if (retVal) retVal = fwrite(&render_blended,        sizeof(render_blended),         1, handle);
+        if (retVal) retVal = fwrite(ascii16xFlashCmdState,  sizeof(ascii16xFlashCmdState),  1, handle);
+        if (retVal) retVal = fwrite(ascii16xFlashReadMode,  sizeof(ascii16xFlashReadMode),  1, handle);
+        if (retVal) retVal = fwrite(ascii16xCfiBackup,      sizeof(ascii16xCfiBackup),      1, handle);
+        if (retVal) retVal = fwrite(flashDirtyBlocks,       sizeof(flashDirtyBlocks),       1, handle);
+        if (retVal) retVal = fwrite(XPal16,                 sizeof(XPal16),                 1, handle);
+        if (retVal) retVal = fwrite(&XPalReal0_16,          sizeof(XPalReal0_16),           1, handle);
+        if (retVal) retVal = fwrite(&vdp15_pending,         sizeof(vdp15_pending),          1, handle);
+        if (retVal) retVal = fwrite(&Pal15Epoch,            sizeof(Pal15Epoch),             1, handle);
+                
         if (retVal) retVal = fwrite(&spare,                 sizeof(spare),                  1, handle);
         if (retVal) retVal = fwrite(&spare,                 sizeof(spare),                  1, handle);
         if (retVal) retVal = fwrite(&spare,                 sizeof(spare),                  1, handle);
@@ -552,6 +561,15 @@ void msxLoadState(u8 gameNum)
             if (retVal) retVal = fread(&msx_caps_lock,         sizeof(msx_caps_lock),          1, handle);
             if (retVal) retVal = fread(&msx_kana_lock,         sizeof(msx_kana_lock),          1, handle);
             if (retVal) retVal = fread(&render_blended,        sizeof(render_blended),         1, handle);
+            if (retVal) retVal = fread(ascii16xFlashCmdState,  sizeof(ascii16xFlashCmdState),  1, handle);
+            if (retVal) retVal = fread(ascii16xFlashReadMode,  sizeof(ascii16xFlashReadMode),  1, handle);
+            if (retVal) retVal = fread(ascii16xCfiBackup,      sizeof(ascii16xCfiBackup),      1, handle);
+            if (retVal) retVal = fread(flashDirtyBlocks,       sizeof(flashDirtyBlocks),       1, handle);
+            if (retVal) retVal = fread(XPal16,                 sizeof(XPal16),                 1, handle);
+            if (retVal) retVal = fread(&XPalReal0_16,          sizeof(XPalReal0_16),           1, handle);
+            if (retVal) retVal = fread(&vdp15_pending,         sizeof(vdp15_pending),          1, handle);
+            if (retVal) retVal = fread(&Pal15Epoch,            sizeof(Pal15Epoch),             1, handle);
+
             if (retVal) retVal = fread(&spare,                 sizeof(spare),                  1, handle);
             if (retVal) retVal = fread(&spare,                 sizeof(spare),                  1, handle);
             if (retVal) retVal = fread(&spare,                 sizeof(spare),                  1, handle);

@@ -33,7 +33,6 @@
 #define YM_GAIN_RAMP_STEP 16            // Gain ramp toward full level on key-on.
 #define YM_PERCUSSION_RELEASE_STEP 3500 // PERCUSSION release rate: higher = faster decay for more distinct drum hits.
 
-
 /* FM envelope: 32-bit fixed point, 16 fractional bits.
    0 = full level, YM_ENV_SILENT = silent.  Amplitude = 255 - (env >> 16). */
 #define YM_ENV_SILENT (255u << 16)
@@ -212,6 +211,10 @@ static YM_Instrument *YM_GetInstrument(YM *chip, u8 instrument)
 
 static inline void YM_PrecomputeFMRates(YM *chip, int ch);
 
+/* Phase increment divisor. 72 = real chip (A4 = 437 Hz at fNum 288/block 4).
+   36 = old behaviour (one octave sharp). 51 = half octave down, for A/B only. */
+#define YM_PHASE_DIV 72
+    
 static u32 YM_ComputePhaseIncrement(u16 fNumber, u8 block, u8 mulNibble)
 {
     // Integer-only: inc = F * 2^block * mulX2 * (masterClock << 12) / (72 * sampleRate)
@@ -221,7 +224,8 @@ static u32 YM_ComputePhaseIncrement(u16 fNumber, u8 block, u8 mulNibble)
     num <<= block;
     num *= (unsigned long long)YM_MASTER_CLOCK << 12;
 
-    unsigned long long inc = num / (36ULL * YM_SAMPLE_RATE); // An octave higher as it sounds better...
+    unsigned long long inc = num / ((unsigned long long)YM_PHASE_DIV * YM_SAMPLE_RATE);
+    
     if (inc >= 0x40000000ULL)
     {
         return 0; // would alias: freeze the operator
@@ -555,7 +559,7 @@ enum
 };
 
 static u8 YM_FM_SustainAtten[16] __attribute__((section(".dtcm"))) = {
-    0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 127
+    0, 74, 128, 165, 191, 210, 223, 232, 239, 243, 247, 249, 251, 252, 253, 255
 };
 
 /* Feedback in phase units (256 per cycle) at full-scale modulator output.
@@ -631,9 +635,11 @@ static inline void YM_PrecomputeFMRates(YM *chip, int ch)
        sustain level while the key is down. To experiment, use:
            p->susMod = inst->egTypeMod ? 0 : p->rrMod;
            p->susCar = inst->egTypeCar ? 0 : p->rrCar;                       */
-    p->susMod = 0;
-    p->susCar = 0;
-
+#define YM_EGTYP0_SHIFT 2  // 1 = half the RR speed; raise to fade slower
+        p->susMod = 0;
+        p->susCar = (chip->channels[ch].instrument && !inst->egTypeCar)
+                    ? (p->rrCar >> YM_EGTYP0_SHIFT) : 0;
+                    
     /* YM2413 TL is 0.75 dB per step: precompute the linear amplitude factor.
        Modulation depth is applied at full precision in the renderer. */
     p->modAtten = YM_TLAtten[inst->tl & 0x3F];
@@ -663,7 +669,7 @@ static inline void YM_PrecomputeFMRates(YM *chip, int ch)
 /* One operator's envelope, advanced one output sample.
    keyEdge = fresh key-on this sample (computed once by the caller so both
    operators restart together). */
-ITCM_CODE static __attribute__((noinline)) void YM_EnvStep(
+static __attribute__((noinline)) void YM_EnvStep(
     u32 *env, u8 *state, u8 keyOn, u8 keyEdge,
     u8 arStep, u32 drInc, u32 slTarget, u32 susInc, u32 rrInc)
 {
@@ -832,16 +838,15 @@ ITCM_CODE static inline s32 YM_RenderChannel2FM(YM_Oscillator *osc, u8 keyOn, in
     osc->phase += pi;
 
     // Apply the configured YM output level after channel-volume attenuation.
-    return carrier >> (13 - myConfig.ymScale);   // same level as (>>14) then << (ymScale+1)
+    // Peak per channel is about +/-8.26M (127 * 255 * 255) before this shift.
+    // (>>12) is +6 dB over the old (>>13), restoring loudness lost when the
+    // sustain-level table and percussive decay were made more accurate.
+    // Equivalent to (>>14) then << (ymScale+2). If dense chords crackle at high
+    // ymScale, check the final mix for overflow or go back to (>>13).
+    return carrier >> (12 - myConfig.ymScale);
 }
 
-// -------------------------------------------------------------------------
-// And finally the mixer - this is a real hot-spot of emulation given the
-// number of music channels that need to be handled. In ITCM to help speed.
-//
-// Melodic FM is rendered at half the output rate; rhythm and filtering
-// remain at the full output rate.
-// -------------------------------------------------------------------------
+
 ITCM_CODE void YMMixer(int len, s16 *dest, YM *chip)
 {
     int i;

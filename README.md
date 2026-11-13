@@ -64,8 +64,13 @@ Please note that flash-saves and disk saves are not supported at this time.
 Version History :
 -----------------------
 
-Version 1.0a - 01-Nov-2026 by wavemotion-dave
+Version 1.1 - 13-Nov-2026 by wavemotion-dave
+* Corrected pitch of MSX-MUSIC to more closely approximate real hardware.
+* Improved YJK color depth so intro sequence looks nicer.
+* ASC16X Flash Write now supported just like real physical cartridge.
+* Warning: Save state format changed - so your old saves won't work (SRAM load will work fine)
 
+Version 1.0a - 01-Nov-2026 by wavemotion-dave
 * MSX TurboR Logo screen displayed (cosmetic change only).
 * There was also a minor timing adjustment to make the game more accurate but it should be hardly noticeable.
 * Audible pop/click removed as game starts to play.

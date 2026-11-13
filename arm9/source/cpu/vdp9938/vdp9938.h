@@ -65,6 +65,17 @@ typedef struct {
 } tScrMode;
 
 extern u8 XBuf[2][256*224];
+extern u16 *XBuf16;
+extern u16 XPal16[16];
+extern u16 Grb332ToRgb15[256];
+extern u16 XPalReal0_16;
+extern u16 vdp15_pending;
+extern u32 Pal15Epoch;
+extern void BuildGrb332LUT(void);
+extern void RefreshLine8_15(u8 uY);
+extern void Screen10_Line_ToRGB15(const u32 *p, u16 *out);
+extern void Screen12_Line_ToRGB15(const u32 *p, u16 *out);
+#define VDP15_Active()  (myConfig.yjkTrueColor && (ScrMode == 8) && (VDP[25] & 0x08))   // YJK on = Screen 10/11/12
 extern u8 OH;
 extern u8 IH;
 extern u8 *VPAGE;
@@ -94,6 +105,7 @@ extern byte RdCtrl9938(void);
 extern void Reset9938(void);
 extern void RebuildLutTablehh(void);
 extern void CheckNewMode(void);
+extern void RebuildPalLUT(void);
 
 // When CPU writes to Port 0x9A:
 extern u8 palette_latch;
