@@ -63,6 +63,8 @@ Please note that flash-saves and disk saves are not supported at this time.
 
 Version History :
 -----------------------
+Version 1.1a - 23-Nov-2026 by wavemotion-dave
+* Fix for YJK high-color mode with latest MSX Translation ROM (0.5)
 
 Version 1.1 - 13-Nov-2026 by wavemotion-dave
 * Corrected pitch of MSX-MUSIC to more closely approximate real hardware.

@@ -3455,20 +3455,15 @@ void CheckNewMode(void)
     default:   newMode=ScrMode;break;
   }
 
-  if ((ScrMode != 8) && (newMode == 8))
+  // See if we should be using 15-bit color (for YJK modes) or 8-bit color
+  if (VDP15_Active())
   {
-      if (myConfig.yjkTrueColor)
-      {
-          setup_emulation_RGB15();
-      }
+      setup_emulation_RGB15();
   }
-  if ((ScrMode == 8) && (newMode != 8))
+  else
   {
-      if (myConfig.yjkTrueColor)
-      {
-          setup_emulation_BP8();
-      }
-  }
+      setup_emulation_BP8();
+  }  
 
   ScrMode=newMode;
 
